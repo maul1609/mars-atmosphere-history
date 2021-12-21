@@ -94,7 +94,7 @@ plt.ion()
 plt.show()
 
 # plot the PSD - Probability Size Distribution / PDF - area under curve is 1.
-plt.subplot(311)
+ax1=plt.subplot(211)
 plt.plot(D,imp)
 plt.yscale('log')
 plt.xscale('log')
@@ -104,7 +104,7 @@ plt.ylabel('PDF from dmin - 10$^6$')
 
 
 # plot the CSD - cumulative Size Distribution / CDF - varies between 0 and 1
-plt.subplot(312)
+ax2=plt.subplot(212)
 plt.plot(D,Prob)
 plt.xscale('log')
 plt.ylabel('Cumulative Frequency')
@@ -119,15 +119,15 @@ diams = np.zeros((1000000))
 for i in range(len(rand_numbers)):
     diams[i] = inv_impactor_csd(rand_numbers[i],nF,a[-1]) 
 
-plt.subplot(313)
-bin_edges=np.logspace(np.log10(dmin),6,50)
+plt.axes(ax1)
+bin_edges=np.logspace(np.log10(dmin),6,25)
 (n,bin_edges)=np.histogram(diams,density=True,range=x,bins=bin_edges)
-plt.plot(bin_edges[0:-1],n,'.-')
+plt.plot((bin_edges[0:-1]+bin_edges[1:])*0.5,n,'.-')
 plt.yscale('log')
 plt.xscale('log')
 plt.xlim(x)
 plt.ylim(y)
 plt.xlabel('D (m)')
 plt.ylabel('Histogram - normalized')
-
+plt.legend(['PDF','Sampled using Monte-Carlo'])
 
