@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
+dmin=3e3
 
 # start of function
 def impactor_sd(D):
@@ -38,27 +38,43 @@ def impactor_csd(D,normalisingFactor,a):
         integrate SD from dmin to D 
     """
     if(D<300e3):
-        integral1=((D**-2.5)/-2.5 - (1e-6**-2.5)/-2.5) 
-        integral1 /= normalisingFactor
+        integral1=((D**-2.5)/-2.5 - (dmin**-2.5)/-2.5) 
+        integral1 *= normalisingFactor
     else:
-        integral1=((300e3**-2.5)/-2.5 - (1e-6**-2.5)/-2.5)
+        integral1=((300e3**-2.5)/-2.5 - (dmin**-2.5)/-2.5)
         integral2=a*(1./300e3-1./D) 
         integral1 += integral2
-        integral1 /= normalisingFactor
+        integral1 *= normalisingFactor
         
         
     return integral1
         
 
+def inv_impactor_csd(prob, normalisingFactor,a):
+    """
+        compute the inverse of impactor_csd
+    """
+    # first calculate the threshold CP where the form of the equation changes
+    K=-(dmin**-2.5)/2.5
+    integral1=(300e3**-2.5)/-2.5 - K
+    integral1a = integral1 * normalisingFactor
+    if(prob <= integral1a):
+        # just find the inverse of the D^-2.5 relation
+        D=((prob/normalisingFactor+K )*-2.5)**(-1./2.5)
+    else:
+        # find the inverse of the second part
+        D=1./300e3-(prob/normalisingFactor-integral1)/a
+        D=1/D
+        
+    #D=np.minimum(D,1e7)
+    return D
 
 
-
-
-D=np.logspace(-6,6,10000)
+D=np.logspace(np.log10(3e3),6,10000)
 (imp,a)=impactor_sd(D)
 
 # evaluate the integral of impactor_sd between 1e-6 and infinity
-integral1=(300e3**-2.5)/-2.5 - (1e-6**-2.5)/-2.5
+integral1=(300e3**-2.5)/-2.5 - (dmin**-2.5)/-2.5
 
 # evaluate the integral of impactor_sd between 1e-6 and inf
 integral2=a[-1]/300e3
@@ -66,23 +82,52 @@ integral2=a[-1]/300e3
 # total area under curve
 integralt=integral1+integral2
 # scale original distribution by area under curve
-imp = imp / integralt
+nF=1./integralt
+imp = imp *nF
+
+
+Prob=np.zeros((len(D)))
+for i in range(len(D)):
+    Prob[i]=impactor_csd(D[i],nF,a[-1])
+
+plt.ion()
+plt.show()
+
+# plot the PSD - Probability Size Distribution / PDF - area under curve is 1.
+plt.subplot(311)
+plt.plot(D,imp)
+plt.yscale('log')
+plt.xscale('log')
+x=plt.xlim()
+y=plt.ylim()
+plt.ylabel('PDF from dmin - 10$^6$')
+
+
+# plot the CSD - cumulative Size Distribution / CDF - varies between 0 and 1
+plt.subplot(312)
+plt.plot(D,Prob)
+plt.xscale('log')
+plt.ylabel('Cumulative Frequency')
 
 
 """
-    sample cumulative distribution to generate sizes of impactors
+    now, test monte carlo generation
+    by sampling cumulative distribution to generate sizes of impactors
 """
 rand_numbers=np.random.rand((1000000))
 diams = np.zeros((1000000))
 for i in range(len(rand_numbers)):
-    diams[i] = 
+    diams[i] = inv_impactor_csd(rand_numbers[i],nF,a[-1]) 
 
-# plt.ion()
-# plt.show()
-# plt.plot(D,imp)
-# plt.yscale('log')
-
-
-
+plt.subplot(313)
+bin_edges=np.logspace(np.log10(dmin),6,50)
+(n,bin_edges)=np.histogram(diams,density=True,range=x,bins=bin_edges)
+plt.plot(bin_edges[0:-1],n,'.-')
+plt.yscale('log')
+plt.xscale('log')
+plt.xlim(x)
+plt.ylim(y)
+plt.xlabel('D (m)')
+plt.ylabel('Histogram - normalized')
 
 
