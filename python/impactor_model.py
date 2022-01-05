@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-dmin=3e3
+
+dmin=3e3 # the smallest size of an impactor
 
 # start of function
 def impactor_sd(D):
@@ -70,10 +71,11 @@ def inv_impactor_csd(prob, normalisingFactor,a):
     return D
 
 
+# starts here
 D=np.logspace(np.log10(3e3),6,10000)
 (imp,a)=impactor_sd(D)
 
-# evaluate the integral of impactor_sd between 1e-6 and infinity
+# evaluate the integral of impactor_sd between dmin and infinity
 integral1=(300e3**-2.5)/-2.5 - (dmin**-2.5)/-2.5
 
 # evaluate the integral of impactor_sd between 1e-6 and inf
@@ -83,9 +85,9 @@ integral2=a[-1]/300e3
 integralt=integral1+integral2
 # scale original distribution by area under curve
 nF=1./integralt
-imp = imp *nF
+imp = imp *nF # PDF
 
-
+# the cumulative distribution function
 Prob=np.zeros((len(D)))
 for i in range(len(D)):
     Prob[i]=impactor_csd(D[i],nF,a[-1])
