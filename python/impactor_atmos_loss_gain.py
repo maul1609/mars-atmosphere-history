@@ -22,29 +22,33 @@ def normalised_mass_lost_atmos(xi):
         normalised atmosphere mass lost 
     """
     
-    logXa = -6.375+5.239*np.log(xi)-2.121*np.log(xi)**2 + \
-        0.397*np.log(xi)**3-0.037*np.log(xi)**4+0.0013*np.log(xi)**5
+    logXa = -6.375+5.239*np.log10(xi)-2.121*np.log10(xi)**2 + \
+        0.397*np.log10(xi)**3-0.037*np.log10(xi)**4+0.0013*np.log10(xi)**5
     
-    return np.exp(logXa)
+    return 10**(logXa)
 
 def normalised_projectile_mass(rho_t,rho_pr,v,uesc,xi):
     """
         see equation 5, Kurokawa et al. (2018)
         normalised projectile mass lost 
     """
-    
-    Xpr = np.min(np.array( \
-        [0.035*rho_t/rho_pr*v/uesc*(np.log(xi)-1), 0.07*rho_t/rho_pr*v/uesc, 1.]))
+#     Xpr = np.min(np.array( \
+#         [0.035*rho_t/rho_pr*v/uesc*(np.log10(xi)-1), 0.07*rho_t/rho_pr*v/uesc, 1.]))
+    Xpr = np.minimum(np.minimum(0.035*rho_t/rho_pr*v/uesc*(np.log10(xi)-1),0.07*rho_t/rho_pr*v/uesc), \
+         np.ones(np.shape(xi)))
     return Xpr
     
     
 if __name__=="__main__":
     # test dimensionless_xi
-    rho_t=3000.
-    rho_pr = 4500.
+    rho_t=4000.
+    rho_pr = 3300.
     D=1000.
-    v=2000.
-    uesc=100.
+    v=15000.
+    Ggrav=6.67e-11
+    Mmars=6.39e23
+    Rmars=3389.5e3
+    uesc=np.sqrt(2.*Ggrav*Mmars/Rmars)
     H=5000.
     rho_0=1.
     
@@ -58,6 +62,28 @@ if __name__=="__main__":
     # test normalised_projectile_mass
     Xpr = normalised_projectile_mass(rho_t, rho_pr, v, uesc, xi)
     print('Normalised mass lost (projectile)' + str(Xpr))
+    
+    # more tests - see Figure 3, Shuvalov (2009):
+    import matplotlib.pyplot as plt
+    xi=np.logspace(np.log10(2),np.log10(10000000),1000)
+    Xa = normalised_mass_lost_atmos(xi)
+    plt.ion() 
+    plt.figure()
+    plt.plot(xi,Xa)
+    plt.xscale('log')  
+    plt.yscale('log')  
+    plt.show()
+    plt.ylabel('Xa')
+    plt.xlabel(r'$\xi$')
+    
+    
+    # figure 4 b
+    Xpr = normalised_projectile_mass(rho_t, rho_pr, v, uesc, xi)
+    plt.figure()
+    plt.plot(xi,Xpr)
+    plt.xscale('log')  
+    plt.ylabel('$X_{pr}$')
+    plt.xlabel(r'$\xi$')
     
     
     
