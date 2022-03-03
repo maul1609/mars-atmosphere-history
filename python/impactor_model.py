@@ -70,66 +70,67 @@ def inv_impactor_csd(prob, normalisingFactor,a):
     #D=np.minimum(D,1e7)
     return D
 
+if __name__ == "__main__":
 
-# starts here
-D=np.logspace(np.log10(3e3),6,10000)
-(imp,a)=impactor_sd(D)
+    # starts here
+    D=np.logspace(np.log10(3e3),6,10000)
+    (imp,a)=impactor_sd(D)
 
-# evaluate the integral of impactor_sd between dmin and infinity
-integral1=(300e3**-2.5)/-2.5 - (dmin**-2.5)/-2.5
+    # evaluate the integral of impactor_sd between dmin and infinity
+    integral1=(300e3**-2.5)/-2.5 - (dmin**-2.5)/-2.5
 
-# evaluate the integral of impactor_sd between 1e-6 and inf
-integral2=a[-1]/300e3
+    # evaluate the integral of impactor_sd between 1e-6 and inf
+    integral2=a[-1]/300e3
 
-# total area under curve
-integralt=integral1+integral2
-# scale original distribution by area under curve
-nF=1./integralt
-imp = imp *nF # PDF
+    # total area under curve
+    integralt=integral1+integral2
+    # scale original distribution by area under curve
+    nF=1./integralt
+    imp = imp *nF # PDF
 
-# the cumulative distribution function
-Prob=np.zeros((len(D)))
-for i in range(len(D)):
-    Prob[i]=impactor_csd(D[i],nF,a[-1])
+    # the cumulative distribution function
+    Prob=np.zeros((len(D)))
+    for i in range(len(D)):
+        Prob[i]=impactor_csd(D[i],nF,a[-1])
 
-plt.ion()
-plt.show()
+    plt.ion()
+    plt.show()
 
-# plot the PSD - Probability Size Distribution / PDF - area under curve is 1.
-ax1=plt.subplot(211)
-plt.plot(D,imp)
-plt.yscale('log')
-plt.xscale('log')
-x=plt.xlim()
-y=plt.ylim()
-plt.ylabel('PDF from dmin - 10$^6$')
-
-
-# plot the CSD - cumulative Size Distribution / CDF - varies between 0 and 1
-ax2=plt.subplot(212)
-plt.plot(D,Prob)
-plt.xscale('log')
-plt.ylabel('Cumulative Frequency')
+    # plot the PSD - Probability Size Distribution / PDF - area under curve is 1.
+    ax1=plt.subplot(211)
+    plt.plot(D,imp)
+    plt.yscale('log')
+    plt.xscale('log')
+    x=plt.xlim()
+    y=plt.ylim()
+    plt.ylabel('PDF from dmin - 10$^6$')
 
 
-"""
-    now, test monte carlo generation
-    by sampling cumulative distribution to generate sizes of impactors
-"""
-rand_numbers=np.random.rand((1000000))
-diams = np.zeros((1000000))
-for i in range(len(rand_numbers)):
-    diams[i] = inv_impactor_csd(rand_numbers[i],nF,a[-1]) 
+    # plot the CSD - cumulative Size Distribution / CDF - varies between 0 and 1
+    ax2=plt.subplot(212)
+    plt.plot(D,Prob)
+    plt.xscale('log')
+    plt.ylabel('Cumulative Frequency')
 
-plt.axes(ax1)
-bin_edges=np.logspace(np.log10(dmin),6,25)
-(n,bin_edges)=np.histogram(diams,density=True,range=x,bins=bin_edges)
-plt.plot((bin_edges[0:-1]+bin_edges[1:])*0.5,n,'.-')
-plt.yscale('log')
-plt.xscale('log')
-plt.xlim(x)
-plt.ylim(y)
-plt.xlabel('D (m)')
-plt.ylabel('Histogram - normalized')
-plt.legend(['PDF','Sampled using Monte-Carlo'])
+
+    """
+        now, test monte carlo generation
+        by sampling cumulative distribution to generate sizes of impactors
+    """
+    rand_numbers=np.random.rand((1000000))
+    diams = np.zeros((1000000))
+    for i in range(len(rand_numbers)):
+        diams[i] = inv_impactor_csd(rand_numbers[i],nF,a[-1]) 
+
+    plt.axes(ax1)
+    bin_edges=np.logspace(np.log10(dmin),6,25)
+    (n,bin_edges)=np.histogram(diams,density=True,range=x,bins=bin_edges)
+    plt.plot((bin_edges[0:-1]+bin_edges[1:])*0.5,n,'.-')
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlim(x)
+    plt.ylim(y)
+    plt.xlabel('D (m)')
+    plt.ylabel('Histogram - normalized')
+    plt.legend(['PDF','Sampled using Monte-Carlo'])
 
