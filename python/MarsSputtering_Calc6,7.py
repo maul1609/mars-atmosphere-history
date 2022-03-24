@@ -6,7 +6,11 @@ Created on Fri Mar  4 12:02:03 2022
 """
 import numpy as np
 
-def F_i_sp(F_CO2,Y_i,Y_CO2,N_i,N_CO2,R_diff,alpha):
+k_B=1.381e-23 # Boltzmann constant
+R_gas = 8.314 # ideal gas constant
+Navo  = 6.02e23
+
+def F_i_sp(F_CO2,Y_i,Y_CO2,N_i,N_CO2,R_diff,alpha1):
     """
     See equation 6 from Kurokawa et al (2018)
     
@@ -17,10 +21,10 @@ def F_i_sp(F_CO2,Y_i,Y_CO2,N_i,N_CO2,R_diff,alpha):
     N_i - the number density at homopause
     R_diff,_i_CO2 - the fractionatin factor by diffusive separation between 
     homopause and exobase
-    alpha - dimensionlass factor, defined by 
-    alpha = sumof_i(N_i/N_CO2,R_diff,_i/_CO2)
+    alpha1 - dimensionlass factor, defined by 
+    alpha1 = sumof_i(N_i/N_CO2,R_diff,_i/_CO2)
     
-    alpha denotes the summation of the mixing ratios at the exobase. 
+    alpha1 denotes the summation of the mixing ratios at the exobase. 
     The fractionation by diffusive separation is given by
     equation 7
 
@@ -28,7 +32,7 @@ def F_i_sp(F_CO2,Y_i,Y_CO2,N_i,N_CO2,R_diff,alpha):
     #the number of commas in this equation are confusing me as 
     #I'm unsure what they're denoting.
     
-    F_i_sp1=(F_CO2*(Y_i/Y_CO2)*(N_i/N_CO2)*(R_diff)*(1/alpha))
+    F_i_sp1=(F_CO2*(Y_i/Y_CO2)*(N_i/N_CO2)*(R_diff)*(1/alpha1))
     
     return F_i_sp1
 
@@ -38,7 +42,7 @@ def alpha(N_i,N_CO2,R_diff):
     
     return alpha1
 
-def R_diffij(exp,deltam_i_j,g,deltaz,k_B,T):
+def R_diffij(deltam_i_j,g,deltaz,T):
     
     #I'm unsure here as R_diff is written using the R_diff,i to denote species
     # and R_diff,i/j, how do I put that in def due to the use of operators? 
@@ -55,3 +59,65 @@ def R_diffij(exp,deltam_i_j,g,deltaz,k_B,T):
 
 
 #table 1, Fco2, for equation 6, in Luhmann et al 1992. 
+
+if __name__ == "__main__":
+    
+    # Ideal gas law
+    # P = (N/V) R T
+    # (N/V) = P / (R T)
+    Press = 0.5e5
+    Temp = 273.15
+    Ntot = Press / (R_gas * Temp) * Navo
+    
+    print(Ntot)
+    
+    
+    # test the fractionation by diffusive separation 
+    # tested against table 3 in Jakosky et al. 1994
+    # watch out for whether it is a molecule or atom
+    amu_co2=44
+    amu_n2=28
+    amu=1.66e-27
+    g_mars=3.721
+    deltaz=40.*1000. # 40000 m
+    T=100.
+    
+    amu_n_15=15
+    amu_n_14=14
+
+    # R(28/44)
+    delta_m=(amu_n2-amu_co2)*amu
+    R_n2_co2=R_diffij(delta_m,g_mars,deltaz,T)
+
+    # R(15/14)
+    delta_m=(amu_n_15-amu_n_14)*amu
+    R_n_14_n_15=R_diffij(delta_m,g_mars,deltaz,T)
+    
+    # R(13/12)
+    amu_c_13=13
+    amu_c_12=12
+    delta_m=(amu_c_13-amu_c_12)*amu
+    R_c_13_c_12=R_diffij(delta_m,g_mars,deltaz,T)
+
+    
+    print(R_n2_co2, R_n_14_n_15, R_c_13_c_12)
+    
+    
+    # alpha calculation
+    amu_species = [16, 20, 40, 44, 28]
+    species = ['O', 'Ne', 'Ar', 'CO2', 'N2']
+    fracall = np.array([0.01, 0.01, 0.01, 0.96, 0.01])
+    # calculate RdiffiCO2
+    RdiffiCO2 = np.zeros(len(fracall))
+    for i in range(len(fracall)):
+        delta_m = amu*(amu_species[i]-amu_species[3])
+        RdiffiCO2[i]=R_diffij(delta_m,g_mars,deltaz,T)
+        
+    print(RdiffiCO2)
+    
+    # alpha can now be calculated
+    Ni = fracall * Ntot
+    alpha1 = alpha(Ni, Ni[3], RdiffiCO2)
+    print(alpha1)
+    
+    

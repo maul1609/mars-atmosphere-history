@@ -3,7 +3,10 @@ import scipy.interpolate as scint
 
 
 def sputtering_co2_rate(timeGyr):
-    
+    """
+        See Luhmann et al. 1992, table 1
+        calculates the sputtering rate of CO2 in Martian atmosphere
+    """
     euv_grid = np.array([6., 3., 1.])
     time_grid = np.array([1., 2., 4.5])
     f_co2_grid = np.array([3.e26, 6.e25, 3.e25])
