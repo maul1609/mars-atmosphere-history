@@ -67,6 +67,9 @@ if __name__=="__main__":
     import matplotlib.pyplot as plt
     xi=np.logspace(np.log10(2),np.log10(10000000),1000)
     Xa = normalised_mass_lost_atmos(xi)
+    fractional_change_in_mass = Xa*(v**2-uesc**2)/uesc**2 # see equation 3
+    
+    
     plt.ion() 
     plt.figure()
     plt.plot(xi,Xa)
@@ -74,6 +77,14 @@ if __name__=="__main__":
     plt.yscale('log')  
     plt.show()
     plt.ylabel('Xa')
+    plt.xlabel(r'$\xi$')
+
+    plt.figure()
+    plt.plot(xi,fractional_change_in_mass)
+    plt.xscale('log')  
+    plt.yscale('log')  
+    plt.show()
+    plt.ylabel(r'$\frac{\Delta m}{m}$')
     plt.xlabel(r'$\xi$')
     
     
