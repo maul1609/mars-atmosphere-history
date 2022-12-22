@@ -70,6 +70,34 @@ def inv_impactor_csd(prob, normalisingFactor,a):
     #D=np.minimum(D,1e7)
     return D
 
+
+def sample_sizes(rand_numbers=np.random.rand((1000000))):
+
+    sampleSize = len(rand_numbers)
+    # evaluate the integral of impactor_sd between dmin and infinity
+    integral1=(300e3**-2.5)/-2.5 - (dmin**-2.5)/-2.5
+
+    # evaluate the integral of impactor_sd between 1e-6 and inf
+    integral2=300.e3**(-1.5)/300e3
+
+    # total area under curve
+    integralt=integral1+integral2
+    # scale original distribution by area under curve
+    nF=1./integralt
+
+
+
+    """
+        now, test monte carlo generation
+        by sampling cumulative distribution to generate sizes of impactors
+    """
+    diams = np.zeros((sampleSize))
+    for i in range(len(rand_numbers)):
+        diams[i] = inv_impactor_csd(rand_numbers[i],nF,300.e3**(-1.5)) 
+    diams = np.minimum(diams,2000.e3)
+    mass = np.pi/6*2600*(diams / 1.e3)**3
+    return (diams,mass)
+
 if __name__ == "__main__":
 
     # starts here

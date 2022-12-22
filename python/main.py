@@ -2,6 +2,8 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.integrate import odeint
 import crater_chronology
+import impactor_model
+import impactor_velocity
 
 """
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
@@ -36,6 +38,7 @@ if __name__ == "__main__":
     t = np.mgrid[tinit:tfinal+tstep:tstep]
     nsteps = len(t)
     n_ode=3
+    rand_numbers=np.random.rand((1000000))
     """
         ----------------------------------------------------------------------------------
     """
@@ -46,10 +49,16 @@ if __name__ == "__main__":
     ystore=np.zeros((nsteps,n_ode))
     ystore[0,0]=1.
     ystore[0,1]=0.
+    # sample the sizes of the impactors
+    diams, mass = impactor_model.sample_sizes(rand_numbers)
+    # sample the impact velocities - not sure if this should be a different random number
+    vels = impactor_velocity.inv_cdf1(rand_numbers)
+    
     """
         ----------------------------------------------------------------------------------
     """
 
+    
 
     """
         main loop ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -66,9 +75,12 @@ if __name__ == "__main__":
         
         # 2. calculate H2O - two temperatures
         
-        # 3. impacts of asteroids and comets. during this time-step
+        # 3a. impacts of asteroids and comets. during this time-step
         num_impactor1=crater_chronology.N1_between(Amars,-t[i+1]/1e9,-t[i]/1e9)
         num_impactor20=crater_chronology.N20_between(Amars,-t[i+1]/1e9,-t[i]/1e9,model=1)
+        
+        # 3b. sample the sizes of impactors
+        
         
         # 4. loss of the atmosphere following empirical formulae
         
