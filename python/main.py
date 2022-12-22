@@ -5,6 +5,7 @@ import crater_chronology
 import impactor_model
 import impactor_velocity
 import impactor_atmos_loss_gain_eq4_5
+import svp_ice
 
 """
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
@@ -32,12 +33,14 @@ if __name__ == "__main__":
     MolW_atm = 44.01e-3 # molecular weight of martian atmosphere - may change???
     Hscale=Rgas*tmars/(MolW_atm*grav_mars) # scale height - m - may change???
     rho_pr=2600. # density of impactor
+    Pcollapse = 0.5
+    
     
     total_impactor_mass = 2.e21 # kg
     tfinal=0.
     tstep=1e6
     omega=2.*np.pi*1.e-9
-    output_interval = 1e7
+    output_interval = 0.5e9
     last_output = tinit-output_interval
     """
         ----------------------------------------------------------------------------------
@@ -48,11 +51,12 @@ if __name__ == "__main__":
     """
     Amars=4.*np.pi*Rmars**2 # surface area of mars
     Matm = Patm*1e5*Amars / grav_mars # mass of atmosphere
+    ph2o = svp_ice.svp_ice01(tmars)
     t = np.mgrid[tinit:tfinal+tstep:tstep]
     nsteps = len(t)
     n_ode=3
-    rand_numbers=np.random.rand((1000000))
-    rand_numbers2=np.random.rand((1000000))
+    rand_numbers=np.random.rand((100000))
+    rand_numbers2=np.random.rand((100000))
     """
         ----------------------------------------------------------------------------------
     """
@@ -122,14 +126,24 @@ if __name__ == "__main__":
         
         # 5. Sputtering and Photochemical escape
         
-        # 6. Volcanic degassing - see rates
-        #Matm = Matm + 0.5e27*MolW_atm*tstep*86400*365/6.02e23
+        # 6. Volcanic degassing - digitise rates and incorporate total
+        Matm = Matm + 1e26*MolW_atm*tstep*86400*365/6.02e23
         # 7. Isotope fractionation. 
         
         
         
+        # readjust Matm
+        Patm = np.maximum(Matm*grav_mars/Amars/1.e5, 6e-3)
+        # if Patm < 0.5 bar - the CO2 condenses at the poles - only the CO2 so will have 
+        # to wait to do properly
+        if(Patm < Pcollapse):
+            Patm = 6.e-3
+            
+        Matm = Patm*1e5*Amars / grav_mars # mass of atmosphere
         
-        Patm = Matm*grav_mars/Amars/1.e5
+            
+        
+        
         ystore[i+1,0]=sol[-1,0]
         ystore[i+1,1]=Patm
         
