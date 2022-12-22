@@ -71,7 +71,7 @@ def inv_impactor_csd(prob, normalisingFactor,a):
     return D
 
 
-def sample_sizes(rand_numbers=np.random.rand((1000000))):
+def sample_sizes(rand_numbers=np.random.rand((1000000)),rho_pr=2600):
 
     sampleSize = len(rand_numbers)
     # evaluate the integral of impactor_sd between dmin and infinity
@@ -95,7 +95,7 @@ def sample_sizes(rand_numbers=np.random.rand((1000000))):
     for i in range(len(rand_numbers)):
         diams[i] = inv_impactor_csd(rand_numbers[i],nF,300.e3**(-1.5)) 
     diams = np.minimum(diams,2000.e3)
-    mass = np.pi/6*2600*(diams / 1.e3)**3
+    mass = np.pi/6*rho_pr*(diams / 1.e3)**3
     return (diams,mass)
 
 if __name__ == "__main__":

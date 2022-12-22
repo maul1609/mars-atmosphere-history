@@ -55,7 +55,7 @@ data = np.array([1.01690620969228, -0.012470382840753302, \
 47.94660954486825, -0.012470382840753302, \
 48.88232448866777, -0.012470382840753302])
 
-datx = data[0:-1:2]
+datx = data[0:-1:2]*1e3
 daty = data[1::2]
 
 daty=np.maximum(daty,0.)
@@ -88,11 +88,11 @@ if __name__ == "__main__":
     vels = inv_cdf(rand_numbers)
         
      
-    bin_edges=np.linspace(0,50,25)
-    (n,bin_edges)=np.histogram(vels,density=True,range=(0,50),bins=bin_edges)
+    bin_edges=np.linspace(0,50000,25)
+    (n,bin_edges)=np.histogram(vels,density=True,range=(0,50000),bins=bin_edges)
     plt.ion()
     plt.plot((bin_edges[0:-1]+bin_edges[1:])*0.5,n,'.-')
-    plt.xlabel('vels (km s$^{-1}$)')
+    plt.xlabel('vels (m s$^{-1}$)')
     plt.ylabel('Histogram - normalized')
     plt.legend(['PDF','Sampled using Monte-Carlo'])
 

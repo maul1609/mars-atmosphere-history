@@ -1,3 +1,5 @@
+import numpy as np
+
 def dimensionless_xi(D,rho_t,rho_pr, v, uesc, H, rho_0):
     """
         see equation 2 from Kurokawa et al (2018)
@@ -12,7 +14,7 @@ def dimensionless_xi(D,rho_t,rho_pr, v, uesc, H, rho_0):
         
     """
     
-    xi = D**3*rho_t*rho_pr*(v*2-uesc*2) / (H**3*rho_0*uesc**2*(rho_t+rho_pr))
+    xi = D**3*rho_t*rho_pr*(v**2-uesc**2) / (H**3*rho_0*uesc**2*(rho_t+rho_pr))
     
     return xi
 
@@ -27,6 +29,32 @@ def normalised_mass_lost_atmos(xi):
     
     return 10**(logXa)
 
+def fractional_change_atmos(xi,v,uesc):
+    """
+        see equation 4, Kurokawa et al (2018)
+        normalised atmosphere mass lost - there seems to be a typo in the Kurokawa paper
+        as it divides by the Matm, but this should be the mass of the projectile
+        according to shuvalov equation 4
+    """
+    
+    frac1 = 10**(-6.375+5.239*np.log10(xi)-2.121*np.log10(xi)**2 + \
+        0.397*np.log10(xi)**3-0.037*np.log10(xi)**4+0.0013*np.log10(xi)**5) * \
+            (v**2-uesc**2)/uesc**2
+    return frac1
+
+def change_atmos(xi,v,uesc,mass):
+    """
+        see equation 4, Kurokawa et al (2018)
+        normalised atmosphere mass lost - there seems to be a typo in the Kurokawa paper
+        as it divides by the Matm, but this should be the mass of the projectile
+        according to shuvalov equation 4
+    """
+    
+    frac1 = 10**(-6.375+5.239*np.log10(xi)-2.121*np.log10(xi)**2 + \
+        0.397*np.log10(xi)**3-0.037*np.log10(xi)**4+0.0013*np.log10(xi)**5) * \
+            (v**2-uesc**2)/uesc**2*mass
+    return frac1
+
 def normalised_projectile_mass(rho_t,rho_pr,v,uesc,xi):
     """
         see equation 5, Kurokawa et al. (2018)
@@ -38,6 +66,9 @@ def normalised_projectile_mass(rho_t,rho_pr,v,uesc,xi):
          np.ones(np.shape(xi)))
     return Xpr
     
+def escape_velocity(Ggrav,Mmars,Rmars):
+    uesc=np.sqrt(2.*Ggrav*Mmars/Rmars)
+    return uesc
     
 if __name__=="__main__":
     # test dimensionless_xi
@@ -48,7 +79,7 @@ if __name__=="__main__":
     Ggrav=6.67e-11
     Mmars=6.39e23
     Rmars=3389.5e3
-    uesc=np.sqrt(2.*Ggrav*Mmars/Rmars)
+    uesc=escape_velocity(Ggrav,Mmars,Rmars)
     H=5000.
     rho_0=1.
     
