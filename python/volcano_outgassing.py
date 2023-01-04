@@ -531,8 +531,8 @@ datah2o = np.array([-4.490061280772037, 8.795349372339431e+25,\
 0, 1e-15])
 
 
-datx = datah2o[0:-1:2]
-daty = datah2o[1::2]
+datx = datah2o[0:-1:10]
+daty = datah2o[1::10]
 
 data_co2_shift_y = 4.991741999785879e+25
 data_n2_shift_y  = 2.4803535371414295e+23

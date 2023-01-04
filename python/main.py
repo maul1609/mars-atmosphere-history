@@ -6,6 +6,7 @@ import impactor_model
 import impactor_velocity
 import impactor_atmos_loss_gain_eq4_5
 import svp_ice
+import volcano_outgassing
 
 """
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
@@ -34,13 +35,13 @@ if __name__ == "__main__":
     Hscale=Rgas*tmars/(MolW_atm*grav_mars) # scale height - m - may change???
     rho_pr=2600. # density of impactor
     Pcollapse = 0.5
-    
+    sampleFlag = 0 # 0=once, 1=every time-step; 
     
     total_impactor_mass = 2.e21 # kg
     tfinal=0.
     tstep=1e6
     omega=2.*np.pi*1.e-9
-    output_interval = 0.5e9
+    output_interval = 1e7
     last_output = tinit-output_interval
     """
         ----------------------------------------------------------------------------------
@@ -88,7 +89,13 @@ if __name__ == "__main__":
         main loop ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
     for i in range(nsteps-1):
-                
+        if sampleFlag == 1:
+            rand_numbers=np.random.rand((100000))
+            rand_numbers2=np.random.rand((100000))
+            # sample the sizes of the impactors
+            diams, mass = impactor_model.sample_sizes(rand_numbers, rho_pr)
+            # sample the impact velocities - not sure if this should be a different random number
+            vels = impactor_velocity.inv_cdf1(rand_numbers2)
         
         
         # solve ODEs
@@ -127,7 +134,10 @@ if __name__ == "__main__":
         # 5. Sputtering and Photochemical escape
         
         # 6. Volcanic degassing - digitise rates and incorporate total
-        Matm = Matm + 1e26*MolW_atm*tstep*86400*365/6.02e23
+        h2o=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'h2o')
+        co2=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'co2')
+        n2 =volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'n2')
+        Matm = Matm + (h2o+co2+n2)*MolW_atm*tstep*86400*365/6.02e23
         # 7. Isotope fractionation. 
         
         
