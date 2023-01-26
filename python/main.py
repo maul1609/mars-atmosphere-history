@@ -32,7 +32,7 @@ if __name__ == "__main__":
     tmars = 210. # temperature of martian surface - may change???
     Rgas = 8.314 # ideal gas constant
     MolW_atm = 44.01e-3 # molecular weight of martian atmosphere - may change???
-    Hscale=Rgas*tmars/(MolW_atm*grav_mars) # scale height - m - may change???
+    MolW_atm = np.array([44.01e-3, 28.0134e-3, 18.01528e-3])
     rho_pr=2600. # density of impactor
     Pcollapse = 0.5
     sampleFlag = 0 # 0=once, 1=every time-step; 
@@ -52,8 +52,12 @@ if __name__ == "__main__":
     """
     Amars=4.*np.pi*Rmars**2 # surface area of mars
     Matm = Patm*1e5*Amars / grav_mars # mass of atmosphere
+    Matm = np.array([Matm, 0., 0.]) # mass of co2, n2, h2o
+    Natm = Matm / MolW_atm     # number of moles of co2, n2, h2o
     ph2o = svp_ice.svp_ice01(tmars)
+    Hscale=Rgas*tmars/(np.sum(Matm)/np.sum(Natm)*grav_mars) # scale height - m - may change???
     t = np.mgrid[tinit:tfinal+tstep:tstep]
+
     nsteps = len(t)
     n_ode=3
     rand_numbers=np.random.rand((100000))
@@ -118,7 +122,8 @@ if __name__ == "__main__":
         
         
         # 4. loss of the atmosphere following empirical formulae
-        rho_0 = Patm*1.e5/tmars/(Rgas/MolW_atm)
+        # sum(Matm) / sum(Natm) is the molecular weight
+        rho_0 = Patm*1.e5/tmars/(Rgas/(np.sum(Matm)/np.sum(Natm)))
         xi=np.maximum(impactor_atmos_loss_gain_eq4_5. \
             dimensionless_xi(diams,rho_t,rho_pr, vels, uesc, Hscale, rho_0)  , 1.e-10) 
         deltaM=impactor_atmos_loss_gain_eq4_5.change_atmos(xi,vels,uesc,mass)
@@ -129,7 +134,9 @@ if __name__ == "__main__":
         #    normalised_projectile_mass(rho_t,rho_pr,vels,uesc,xi),0)
         #deltaM=deltaM-Xpr*mass*0.01
         
-        Matm = Matm - np.sum(deltaM)*scaling
+        frac = Matm / np.sum(Matm) # initial fraction of each component - stays the same
+        Matm_final = np.sum(Matm) - np.sum(deltaM)*scaling
+        Matm = frac *Matm_final
         
         # 5. Sputtering and Photochemical escape
         
@@ -137,22 +144,27 @@ if __name__ == "__main__":
         h2o=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'h2o')
         co2=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'co2')
         n2 =volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'n2')
-        Matm = Matm + (h2o+co2+n2)*MolW_atm*tstep*86400*365/6.02e23
+        Matm = Matm + np.array([co2,n2,h2o])*MolW_atm*tstep*86400*365/6.02e23
+        
         # 7. Isotope fractionation. 
         
         
         
         # readjust Matm
-        Patm = np.maximum(Matm*grav_mars/Amars/1.e5, 6e-3)
+        Patm = np.maximum(np.sum(Matm)*grav_mars/Amars/1.e5, 6e-3)
         # if Patm < 0.5 bar - the CO2 condenses at the poles - only the CO2 so will have 
         # to wait to do properly
         if(Patm < Pcollapse):
             Patm = 6.e-3
-            
-        Matm = Patm*1e5*Amars / grav_mars # mass of atmosphere
+            Matm[0] = Patm*1e5*Amars / grav_mars # mass of atmosphere
+            Matm[1:] = 0. # if it's collapsed, just assume it is CO2
+
         
-            
         
+        Natm = Matm / MolW_atm
+        
+        # update scale height
+        Hscale=Rgas*tmars/(np.sum(Matm)/np.sum(Natm)*grav_mars) # scale height - m - may change???
         
         ystore[i+1,0]=sol[-1,0]
         ystore[i+1,1]=Patm
