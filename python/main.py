@@ -7,6 +7,46 @@ import impactor_velocity
 import impactor_atmos_loss_gain_eq4_5
 import svp_ice
 import volcano_outgassing
+import sputtering_co2
+
+# table 4, Kurokawa et al.
+isotopes = ['d15N',
+            '20Ne/22Ne',
+            '36Ar/38Ar',
+            '78Kr/84Kr',
+            '80Kr/84Kr',
+            '82Kr/84Kr',
+            '83Kr/84Kr',
+            '86Kr/84Kr',
+            '124Xe/130Xe',
+            '126Xe/130Xe',
+            '128Xe/130Xe',
+            '129Xe/130Xe',
+            '131Xe/130Xe',
+            '132Xe/130Xe',
+            '134Xe/130Xe',
+            '136Xe/130Xe']
+isotope_comps = dict()
+isotope_comps['Mars'] = [572,10.1,4.2,6.37e-3,4.09e-2,0.2054,\
+                         0.2034,0.3006,2.45e-2,2.12e-2,0.4767, \
+                         16.400,5.147,6.460,2.587,2.294]
+                         
+isotope_comps['Volcanic degassing'] = [-30,13.7,5.3,5.962e-3,3.919e-2,\
+                    0.20149,0.20141,0.30950,2.851e-2,2.512e-2,0.5073,6.358,\
+                    5.043,6.150,2.359,1.988]
+                    
+isotope_comps['Asteroids'] = [-30, 8.9,5.3,5.962e-3,3.919e-2,\
+                    0.20149,0.20141,0.30950,2.851e-2,2.512e-2,0.5073,6.358,\
+                    5.043,6.150,2.359,1.988]
+                    
+isotope_comps['Comets'] = [1000,13.7,5.4,6.470e-3,4.124e-2,0.20629,0.20340,\
+                        0.29915,2.947e-2,2.541e-2,0.50873,6.287,4.9958, \
+                        6.0479,2.1288,1.6634]
+                    
+isotope_comps['IDPs'] = [np.nan, 13.7,5.8,6.470e-3,4.124e-2,0.20629,0.20340,\
+                        0.29915,2.947e-2,2.541e-2,0.50873,6.287,4.9958, \
+                        6.0479,2.1288,1.6634]
+
 
 """
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
@@ -19,6 +59,7 @@ def test(y,t,omega):
 
 
 if __name__ == "__main__":
+
     """
         initial conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
@@ -31,7 +72,7 @@ if __name__ == "__main__":
     rho_t=4000. # density of martian surface
     tmars = 210. # temperature of martian surface - may change???
     Rgas = 8.314 # ideal gas constant
-    MolW_atm = 44.01e-3 # molecular weight of martian atmosphere - may change???
+    #MolW_atm = 44.01e-3 # molecular weight of martian atmosphere - may change???
     MolW_atm = np.array([44.01e-3, 28.0134e-3, 18.01528e-3])
     rho_pr=2600. # density of impactor
     Pcollapse = 0.5
@@ -43,9 +84,16 @@ if __name__ == "__main__":
     omega=2.*np.pi*1.e-9
     output_interval = 1e7
     last_output = tinit-output_interval
+    
+    isotope_comps_sim = np.array(isotope_comps['Volcanic degassing'])
+    ind,=np.where(['Xe' in iso for iso in isotopes])
+    isotope_comps_sim[ind]=np.array(isotope_comps['Mars'])[ind]
     """
         ----------------------------------------------------------------------------------
     """
+
+
+
 
     """
         auxiliary calcs ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -103,8 +151,8 @@ if __name__ == "__main__":
         
         
         # solve ODEs
-        y0 = ystore[i,0:2]
-        sol = odeint(test, y0, [t[i], t[i+1]], args=(omega,) )
+        #y0 = ystore[i,0:2]
+        #sol = odeint(test, y0, [t[i], t[i+1]], args=(omega,) )
         
         # 1. collapse? 0.5 bar and assumed to be 6 mbar
         
@@ -137,10 +185,15 @@ if __name__ == "__main__":
         frac = Matm / np.sum(Matm) # initial fraction of each component - stays the same
         Matm_final = np.sum(Matm) - np.sum(deltaM)*scaling
         Matm = frac *Matm_final
+        Natm = Matm /MolW_atm
         
         # 5. Sputtering and Photochemical escape
+        (euv_flux, f_co2_flux) = sputtering_co2.sputtering_co2_rate(-t[i]/1e9)
+        Natm[0] = Natm[0] - f_co2_flux * tstep *86400*365/6.02e23
+        Natm[0] = np.maximum(Natm[0],0.)
         
         # 6. Volcanic degassing - digitise rates and incorporate total
+        Matm = Natm * MolW_atm
         h2o=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'h2o')
         co2=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'co2')
         n2 =volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'n2')
