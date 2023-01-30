@@ -8,44 +8,8 @@ import impactor_atmos_loss_gain_eq4_5
 import svp_ice
 import volcano_outgassing
 import sputtering_co2
-
-# table 4, Kurokawa et al.
-isotopes = ['d15N',
-            '20Ne/22Ne',
-            '36Ar/38Ar',
-            '78Kr/84Kr',
-            '80Kr/84Kr',
-            '82Kr/84Kr',
-            '83Kr/84Kr',
-            '86Kr/84Kr',
-            '124Xe/130Xe',
-            '126Xe/130Xe',
-            '128Xe/130Xe',
-            '129Xe/130Xe',
-            '131Xe/130Xe',
-            '132Xe/130Xe',
-            '134Xe/130Xe',
-            '136Xe/130Xe']
-isotope_comps = dict()
-isotope_comps['Mars'] = [572,10.1,4.2,6.37e-3,4.09e-2,0.2054,\
-                         0.2034,0.3006,2.45e-2,2.12e-2,0.4767, \
-                         16.400,5.147,6.460,2.587,2.294]
-                         
-isotope_comps['Volcanic degassing'] = [-30,13.7,5.3,5.962e-3,3.919e-2,\
-                    0.20149,0.20141,0.30950,2.851e-2,2.512e-2,0.5073,6.358,\
-                    5.043,6.150,2.359,1.988]
-                    
-isotope_comps['Asteroids'] = [-30, 8.9,5.3,5.962e-3,3.919e-2,\
-                    0.20149,0.20141,0.30950,2.851e-2,2.512e-2,0.5073,6.358,\
-                    5.043,6.150,2.359,1.988]
-                    
-isotope_comps['Comets'] = [1000,13.7,5.4,6.470e-3,4.124e-2,0.20629,0.20340,\
-                        0.29915,2.947e-2,2.541e-2,0.50873,6.287,4.9958, \
-                        6.0479,2.1288,1.6634]
-                    
-isotope_comps['IDPs'] = [np.nan, 13.7,5.8,6.470e-3,4.124e-2,0.20629,0.20340,\
-                        0.29915,2.947e-2,2.541e-2,0.50873,6.287,4.9958, \
-                        6.0479,2.1288,1.6634]
+import MarsSputtering_Calc6_7
+import isotopic_data
 
 
 """
@@ -74,6 +38,7 @@ if __name__ == "__main__":
     Rgas = 8.314 # ideal gas constant
     #MolW_atm = 44.01e-3 # molecular weight of martian atmosphere - may change???
     MolW_atm = np.array([44.01e-3, 28.0134e-3, 18.01528e-3])
+    
     rho_pr=2600. # density of impactor
     Pcollapse = 0.5
     sampleFlag = 0 # 0=once, 1=every time-step; 
@@ -85,9 +50,9 @@ if __name__ == "__main__":
     output_interval = 1e7
     last_output = tinit-output_interval
     
-    isotope_comps_sim = np.array(isotope_comps['Volcanic degassing'])
-    ind,=np.where(['Xe' in iso for iso in isotopes])
-    isotope_comps_sim[ind]=np.array(isotope_comps['Mars'])[ind]
+    isotope_comps_sim = np.array(isotopic_data.isotope_comps['Volcanic degassing'])
+    ind,=np.where(['Xe' in iso for iso in isotopic_data.isotopes])
+    isotope_comps_sim[ind]=np.array(isotopic_data.isotope_comps['Mars'])[ind]
     """
         ----------------------------------------------------------------------------------
     """
@@ -100,8 +65,11 @@ if __name__ == "__main__":
     """
     Amars=4.*np.pi*Rmars**2 # surface area of mars
     Matm = Patm*1e5*Amars / grav_mars # mass of atmosphere
-    Matm = np.array([Matm, 0., 0.]) # mass of co2, n2, h2o
-    Natm = Matm / MolW_atm     # number of moles of co2, n2, h2o
+    # call function to set isotopes and adjust atmosphere to same pressure
+    (mole1,mole_elements)=isotopic_data.set_amount_of_element(Matm/MolW_atm[0])
+    Natm = np.concatenate([mole1,[0]]) # number of moles of co2, n2, h2o
+    Matm = Natm *MolW_atm  # mass of co2, n2, h2o
+#     Natm = Matm / MolW_atm     # number of moles of co2, n2, h2o
     ph2o = svp_ice.svp_ice01(tmars)
     Hscale=Rgas*tmars/(np.sum(Matm)/np.sum(Natm)*grav_mars) # scale height - m - may change???
     t = np.mgrid[tinit:tfinal+tstep:tstep]
@@ -181,16 +149,33 @@ if __name__ == "__main__":
         #Xpr=np.maximum(impactor_atmos_loss_gain_eq4_5. \
         #    normalised_projectile_mass(rho_t,rho_pr,vels,uesc,xi),0)
         #deltaM=deltaM-Xpr*mass*0.01
+        dM = np.sum(deltaM)*scaling
+        const1 = dM / np.sum(MolW_atm*Natm)
+        Natm = Natm - const1*Natm
+        Matm = Natm*MolW_atm
+        # remove elements in the impact too
+        mole_elements = mole_elements*(1.-const1)
         
-        frac = Matm / np.sum(Matm) # initial fraction of each component - stays the same
-        Matm_final = np.sum(Matm) - np.sum(deltaM)*scaling
-        Matm = frac *Matm_final
-        Natm = Matm /MolW_atm
         
         # 5. Sputtering and Photochemical escape
+        # sputter each element / isotope: c (Co2), N (N2), Ne, Ar, Kr, Xe       
         (euv_flux, f_co2_flux) = sputtering_co2.sputtering_co2_rate(-t[i]/1e9)
-        Natm[0] = Natm[0] - f_co2_flux * tstep *86400*365/6.02e23
-        Natm[0] = np.maximum(Natm[0],0.)
+        F_i_sp1=MarsSputtering_Calc6_7.F_i_sp(f_co2_flux, \
+            mole_elements,Natm[0],['C','N','Ne','Ar','Kr','Xe'])
+        # CO2 and N2
+        Natm[0] = Natm[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
+        Natm[1] = Natm[1] - 0.5*F_i_sp1[1] * tstep *86400*365/6.02e23
+        Natm = np.maximum(Natm,0.)
+        # now elements
+        mole_elements[0] = mole_elements[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
+        mole_elements[1] = mole_elements[1] - F_i_sp1[1] * tstep *86400*365/6.02e23
+        mole_elements[2] = mole_elements[2] - F_i_sp1[2] * tstep *86400*365/6.02e23
+        mole_elements[3] = mole_elements[3] - F_i_sp1[3] * tstep *86400*365/6.02e23
+        mole_elements[4] = mole_elements[4] - F_i_sp1[4] * tstep *86400*365/6.02e23
+        mole_elements[5] = mole_elements[5] - F_i_sp1[5] * tstep *86400*365/6.02e23
+        
+        
+        
         
         # 6. Volcanic degassing - digitise rates and incorporate total
         Matm = Natm * MolW_atm
@@ -215,11 +200,13 @@ if __name__ == "__main__":
         
         
         Natm = Matm / MolW_atm
+        mole_elements[0] += co2*tstep*86400*365/6.02e23
+        mole_elements[1] += 2*n2*tstep*86400*365/6.02e23
         
         # update scale height
         Hscale=Rgas*tmars/(np.sum(Matm)/np.sum(Natm)*grav_mars) # scale height - m - may change???
         
-        ystore[i+1,0]=sol[-1,0]
+        #ystore[i+1,0]=sol[-1,0]
         ystore[i+1,1]=Patm
         
         if ((t[i]-last_output)>=output_interval):

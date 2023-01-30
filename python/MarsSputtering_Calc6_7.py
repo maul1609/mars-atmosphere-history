@@ -10,7 +10,32 @@ k_B=1.381e-23 # Boltzmann constant
 R_gas = 8.314 # ideal gas constant
 Navo  = 6.02e23
 
-def F_i_sp(F_CO2,Y_i,Y_CO2,N_i,N_CO2,R_diff,alpha1):
+Y_CO2=0.67 # see page 3 of Luhmann et al.
+
+amu=1.66e-27
+g_mars=3.721
+deltaz=40.*1000. # 40000 m
+T=100.
+amu_co2=44
+
+yields = dict()
+yields['C'] = 0.67 # strictly 0.7
+yields['N'] = 2.4
+yields['Ne'] = 3.
+yields['Ar'] = 1.4
+yields['Kr'] = 1.143
+yields['Xe'] = 0.738
+
+amus = dict()
+amus['C'] = 12
+amus['N'] = 14
+amus['Ne'] = 20
+amus['Ar'] = 36
+amus['Kr'] = 84
+amus['Xe'] = 130
+
+
+def F_i_sp(F_CO2,N_i,N_CO2,elements):
     """
     See equation 6 from Kurokawa et al (2018)
     
@@ -31,6 +56,16 @@ def F_i_sp(F_CO2,Y_i,Y_CO2,N_i,N_CO2,R_diff,alpha1):
     """
     #the number of commas in this equation are confusing me as 
     #I'm unsure what they're denoting.
+    Y_i = np.zeros(len(elements))
+    delta_m = np.zeros(len(elements))
+    R_diff = np.zeros(len(elements))
+    for i in range(len(elements)):
+        Y_i[i] = yields[elements[i]]
+        delta_m[i]=(amus[elements[i]]-amu_co2)*amu
+        R_diff[i] = R_diffij(delta_m[i],g_mars,deltaz,T)
+    
+    
+    alpha1 = alpha(N_i, N_CO2, R_diff)
     
     F_i_sp1=(F_CO2*(Y_i/Y_CO2)*(N_i/N_CO2)*(R_diff)*(1/alpha1))
     
@@ -75,12 +110,7 @@ if __name__ == "__main__":
     # test the fractionation by diffusive separation 
     # tested against table 3 in Jakosky et al. 1994
     # watch out for whether it is a molecule or atom
-    amu_co2=44
     amu_n2=28
-    amu=1.66e-27
-    g_mars=3.721
-    deltaz=40.*1000. # 40000 m
-    T=100.
     
     amu_n_15=15
     amu_n_14=14
