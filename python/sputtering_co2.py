@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.interpolate as scint 
 
-
+    
 def sputtering_co2_rate(timeGyr):
     """
         See Luhmann et al. 1992, table 1

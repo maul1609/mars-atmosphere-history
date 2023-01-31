@@ -10,7 +10,8 @@ import volcano_outgassing
 import sputtering_co2
 import MarsSputtering_Calc6_7
 import isotopic_data
-
+import photo_chemical
+import IDPs
 
 """
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     Ggrav=6.67e-11 # gravitational constant
     grav_mars=3.721 # m/s^2
     rho_t=4000. # density of martian surface
-    tmars = 210. # temperature of martian surface - may change???
+    tmars = 270. # temperature of martian surface - may change???
     Rgas = 8.314 # ideal gas constant
     #MolW_atm = 44.01e-3 # molecular weight of martian atmosphere - may change???
     MolW_atm = np.array([44.01e-3, 28.0134e-3, 18.01528e-3])
@@ -49,6 +50,9 @@ if __name__ == "__main__":
     omega=2.*np.pi*1.e-9
     output_interval = 1e7
     last_output = tinit-output_interval
+    
+    # IDP rates, table 2
+    IDP_rate_moles = IDPs.get_mole(['Ne','Ar','Kr','Xe'],Ne=1)
     
     isotope_comps_sim = np.array(isotopic_data.isotope_comps['Volcanic degassing'])
     ind,=np.where(['Xe' in iso for iso in isotopic_data.isotopes])
@@ -175,6 +179,26 @@ if __name__ == "__main__":
         mole_elements[5] = mole_elements[5] - F_i_sp1[5] * tstep *86400*365/6.02e23
         
         
+        # 5b photochemical escape
+        # carbon - rate of escape
+        Fcph = photo_chemical.carbon_escape((t[i]-tinit)/1e9,\
+            (t[i+1]-tinit)/1e9,(-tinit)/1e9) / 6.02e23
+        # nitrogen - rate of escape
+        (fn2_1,fn2_2,fn2_3)=photo_chemical.nitrogen_escape(np.maximum(Natm[0],1e-3),Natm[1],euv_flux,Amars)
+        # total loss rate
+        fn2 = fn2_1+fn2_2+fn2_3
+        Natm[0] = Natm[0] - Fcph*tstep*86400*365/6.02e23
+        Natm[1] = Natm[1] - fn2*tstep*86400*365/6.02e23
+        mole_elements[0] -= Fcph*tstep*86400*365/6.02e23
+        mole_elements[1] -= fn2*tstep*86400*365/6.02e23 * 2
+        Matm = Natm * MolW_atm
+        
+        
+        
+        # 5c IDPs - just table 3, Kurokawa et al.
+        mole_elements[2:] += IDP_rate_moles*tstep / 1e9
+        
+        
         
         
         # 6. Volcanic degassing - digitise rates and incorporate total
@@ -183,7 +207,8 @@ if __name__ == "__main__":
         co2=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'co2')
         n2 =volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'n2')
         Matm = Matm + np.array([co2,n2,h2o])*MolW_atm*tstep*86400*365/6.02e23
-        
+        Matm[2] = np.minimum(Matm[2]*grav_mars/Amars,ph2o)*Amars/grav_mars
+        Natm = Matm / MolW_atm
         # 7. Isotope fractionation. 
         
         
@@ -191,11 +216,15 @@ if __name__ == "__main__":
         # readjust Matm
         Patm = np.maximum(np.sum(Matm)*grav_mars/Amars/1.e5, 6e-3)
         # if Patm < 0.5 bar - the CO2 condenses at the poles - only the CO2 so will have 
-        # to wait to do properly
+        # to wait to do properly. e.g. need to know how lack of absorption by CO2 will affect 
+        # temperature, and then link this to the clausius clapeyron equation
+        # same for water vapour really, perhaps having a reservoir
         if(Patm < Pcollapse):
             Patm = 6.e-3
             Matm[0] = Patm*1e5*Amars / grav_mars # mass of atmosphere
-            Matm[1:] = 0. # if it's collapsed, just assume it is CO2
+            Patm = np.sum(Matm)*grav_mars/(Amars)/1e5
+            #Matm[1:] = 0. # if it's collapsed, just assume it is CO2
+            mole_elements[0] = Matm[0] / MolW_atm[0]
 
         
         
