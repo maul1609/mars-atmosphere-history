@@ -35,10 +35,14 @@ if __name__ == "__main__":
     Ggrav=6.67e-11 # gravitational constant
     grav_mars=3.721 # m/s^2
     rho_t=4000. # density of martian surface
-    tmars = 270. # temperature of martian surface - may change???
+    tmars = 210. # temperature of martian surface - may change???
     Rgas = 8.314 # ideal gas constant
     #MolW_atm = 44.01e-3 # molecular weight of martian atmosphere - may change???
     MolW_atm = np.array([44.01e-3, 28.0134e-3, 18.01528e-3])
+    X_gas = 0.01
+    f_comet = 0.001
+    C_vol = 5.
+    C_Ne_IDP = 10.
     
     rho_pr=2600. # density of impactor
     Pcollapse = 0.5
@@ -52,7 +56,7 @@ if __name__ == "__main__":
     last_output = tinit-output_interval
     
     # IDP rates, table 2
-    IDP_rate_moles = IDPs.get_mole(['Ne','Ar','Kr','Xe'],Ne=1)
+    IDP_rate_moles = IDPs.get_mole(['Ne','Ar','Kr','Xe'],Ne=C_Ne_IDP)
     
     isotope_comps_sim = np.array(isotopic_data.isotope_comps['Volcanic degassing'])
     ind,=np.where(['Xe' in iso for iso in isotopic_data.isotopes])
@@ -80,8 +84,8 @@ if __name__ == "__main__":
 
     nsteps = len(t)
     n_ode=3
-    rand_numbers=np.random.rand((100000))
-    rand_numbers2=np.random.rand((100000))
+    #rand_numbers=np.random.rand((100000))
+    #rand_numbers2=np.random.rand((100000))
     """
         ----------------------------------------------------------------------------------
     """
@@ -136,7 +140,6 @@ if __name__ == "__main__":
         
 
         # note that results at each time get scaled by:
-        # result * total_impactor_mass / np.sum(mass) * num_impactor1 / num_impactor1_tot
         scaling = total_impactor_mass / np.sum(mass) * num_impactor1 / num_impactor1_tot
         
         
@@ -150,17 +153,90 @@ if __name__ == "__main__":
         
         
         # left in the projectiles is (1-Xpr)*mass, but then only a certain % of this 
-        #Xpr=np.maximum(impactor_atmos_loss_gain_eq4_5. \
-        #    normalised_projectile_mass(rho_t,rho_pr,vels,uesc,xi),0)
+        Xpr=np.maximum(impactor_atmos_loss_gain_eq4_5. \
+            normalised_projectile_mass(rho_t,rho_pr,vels,uesc,xi),0)
+        # deltaM is the atmospheric loss for impactor = mass
+        # Xpr*mass*0.01 is the mass added from the projectiles
+        mass_added = np.sum((1.-Xpr)*mass)*X_gas*scaling
+        if(t[i]  > -4.1e9):
+            f_comet1 = f_comet
+        else:
+            f_comet1 = 0.
+            
+        mass_added_comet = mass_added * f_comet1
+        mass_added_asteroid = mass_added * (1.-f_comet1)
+        
+        
+        
         #deltaM=deltaM-Xpr*mass*0.01
         dM = np.sum(deltaM)*scaling
         const1 = dM / np.sum(MolW_atm*Natm)
         Natm = Natm - const1*Natm
-        Matm = Natm*MolW_atm
         # remove elements in the impact too
         mole_elements = mole_elements*(1.-const1)
         
+       
         
+        
+        # 4a add the carbon dioxide outgassed from asteroids and comets
+        Natm[0] += mass_added / MolW_atm[0]
+        # molecular nitrogen
+        Natm[1] += 0.5 * mass_added_asteroid / MolW_atm[0]* \
+            isotopic_data.abundances1['Asteroids'][1][1] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0] + \
+            0.5*mass_added_comet / MolW_atm[0]* \
+            isotopic_data.abundances1['Comets'][1][1] / \
+            isotopic_data.abundances1['Comets'][1][0] * \
+            isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0]
+        # also for the elemental composition:
+        mole_elements[0] += mass_added / MolW_atm[0]
+        mole_elements[1] += mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.abundances1['Asteroids'][1][1] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0] + \
+            mass_added_comet / MolW_atm[0] * \
+            isotopic_data.abundances1['Comets'][1][1] / \
+            isotopic_data.abundances1['Comets'][1][0] * \
+            isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0]
+        mole_elements[2] += mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.abundances1['Asteroids'][1][2] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[2] / isotopic_data.solar_abundances[0] + \
+            mass_added_comet / MolW_atm[0] * \
+            isotopic_data.abundances1['Comets'][1][2] / \
+            isotopic_data.abundances1['Comets'][1][0] * \
+            isotopic_data.solar_abundances[2] / isotopic_data.solar_abundances[0]
+        mole_elements[3] += mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.abundances1['Asteroids'][1][3] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[3] / isotopic_data.solar_abundances[0] + \
+            mass_added_comet / MolW_atm[0] * \
+            isotopic_data.abundances1['Comets'][1][3] / \
+            isotopic_data.abundances1['Comets'][1][0] * \
+            isotopic_data.solar_abundances[3] / isotopic_data.solar_abundances[0]
+        mole_elements[4] += mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.abundances1['Asteroids'][1][4] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[4] / isotopic_data.solar_abundances[0] + \
+            mass_added_comet / MolW_atm[0] * \
+            isotopic_data.abundances1['Comets'][1][4] / \
+            isotopic_data.abundances1['Comets'][1][0] * \
+            isotopic_data.solar_abundances[4] / isotopic_data.solar_abundances[0]
+        mole_elements[5] += mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.abundances1['Asteroids'][1][5] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[5] / isotopic_data.solar_abundances[0] + \
+            mass_added_comet / MolW_atm[0] * \
+            isotopic_data.abundances1['Comets'][1][5] / \
+            isotopic_data.abundances1['Comets'][1][0] * \
+            isotopic_data.solar_abundances[5] / isotopic_data.solar_abundances[0]
+            
+            
+        
+        
+        Matm = Natm*MolW_atm
+
         # 5. Sputtering and Photochemical escape
         # sputter each element / isotope: c (Co2), N (N2), Ne, Ar, Kr, Xe       
         (euv_flux, f_co2_flux) = sputtering_co2.sputtering_co2_rate(-t[i]/1e9)
@@ -203,9 +279,9 @@ if __name__ == "__main__":
         
         # 6. Volcanic degassing - digitise rates and incorporate total
         Matm = Natm * MolW_atm
-        h2o=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'h2o')
-        co2=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'co2')
-        n2 =volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'n2')
+        h2o=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'h2o') * C_vol
+        co2=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'co2') * C_vol
+        n2 =volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'n2')  * C_vol
         Matm = Matm + np.array([co2,n2,h2o])*MolW_atm*tstep*86400*365/6.02e23
         Matm[2] = np.minimum(Matm[2]*grav_mars/Amars,ph2o)*Amars/grav_mars
         Natm = Matm / MolW_atm
