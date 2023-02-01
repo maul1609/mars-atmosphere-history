@@ -61,6 +61,53 @@ if __name__ == "__main__":
     isotope_comps_sim = np.array(isotopic_data.isotope_comps['Volcanic degassing'])
     ind,=np.where(['Xe' in iso for iso in isotopic_data.isotopes])
     isotope_comps_sim[ind]=np.array(isotopic_data.isotope_comps['Mars'])[ind]
+    isotopes = [None]*5
+    isotopes[0] = [isotopic_data.isotopes[0]]
+    isotopes[1] = [isotopic_data.isotopes[1]]
+    isotopes[2] = [isotopic_data.isotopes[2]]
+    isotopes[3] = isotopic_data.isotopes[3:8]
+    isotopes[4] = isotopic_data.isotopes[8:]
+    isotopes_sim = [None]*5
+    isotopes_sim[0] = [(isotope_comps_sim[0]/1000.+1)*3676.5e-6]
+    isotopes_sim[1] = [isotope_comps_sim[1]]
+    isotopes_sim[2] = [isotope_comps_sim[2]]
+    isotopes_sim[3] = isotope_comps_sim[3:8]
+    isotopes_sim[4] = isotope_comps_sim[8:]
+    isotope_sources = dict()
+    isotope_sources['Mars'] = [None]*5
+    isotope_sources['Volcanic degassing'] = [None]*5
+    isotope_sources['Asteroids'] = [None]*5
+    isotope_sources['Comets'] = [None]*5
+    isotope_sources['IDPs'] = [None]*5
+    isotope_sources['Mars'][0] = [(isotopic_data.isotope_comps['Mars'][0]/1000.+1)*3676.5e-6]
+    isotope_sources['Mars'][1] = [isotopic_data.isotope_comps['Mars'][1]]
+    isotope_sources['Mars'][2] = [isotopic_data.isotope_comps['Mars'][2]]
+    isotope_sources['Mars'][3] = isotopic_data.isotope_comps['Mars'][3:8]
+    isotope_sources['Mars'][4] = isotopic_data.isotope_comps['Mars'][8:]
+    
+    isotope_sources['Volcanic degassing'][0] = [(isotopic_data.isotope_comps['Volcanic degassing'][0]/1000.+1)*3676.5e-6]
+    isotope_sources['Volcanic degassing'][1] = [isotopic_data.isotope_comps['Volcanic degassing'][1]]
+    isotope_sources['Volcanic degassing'][2] = [isotopic_data.isotope_comps['Volcanic degassing'][2]]
+    isotope_sources['Volcanic degassing'][3] = isotopic_data.isotope_comps['Volcanic degassing'][3:8]
+    isotope_sources['Volcanic degassing'][4] = isotopic_data.isotope_comps['Volcanic degassing'][8:]
+    
+    isotope_sources['Asteroids'][0] = [(isotopic_data.isotope_comps['Asteroids'][0]/1000.+1)*3676.5e-6]
+    isotope_sources['Asteroids'][1] = [isotopic_data.isotope_comps['Asteroids'][1]]
+    isotope_sources['Asteroids'][2] = [isotopic_data.isotope_comps['Asteroids'][2]]
+    isotope_sources['Asteroids'][3] = isotopic_data.isotope_comps['Asteroids'][3:8]
+    isotope_sources['Asteroids'][4] = isotopic_data.isotope_comps['Asteroids'][8:]
+
+    isotope_sources['Comets'][0] = [(isotopic_data.isotope_comps['Comets'][0]/1000.+1)*3676.5e-6]
+    isotope_sources['Comets'][1] = [isotopic_data.isotope_comps['Comets'][1]]
+    isotope_sources['Comets'][2] = [isotopic_data.isotope_comps['Comets'][2]]
+    isotope_sources['Comets'][3] = isotopic_data.isotope_comps['Comets'][3:8]
+    isotope_sources['Comets'][4] = isotopic_data.isotope_comps['Comets'][8:]
+
+    isotope_sources['IDPs'][0] = [(isotopic_data.isotope_comps['IDPs'][0]/1000.+1)*3676.5e-6]
+    isotope_sources['IDPs'][1] = [isotopic_data.isotope_comps['IDPs'][1]]
+    isotope_sources['IDPs'][2] = [isotopic_data.isotope_comps['IDPs'][2]]
+    isotope_sources['IDPs'][3] = isotopic_data.isotope_comps['IDPs'][3:8]
+    isotope_sources['IDPs'][4] = isotopic_data.isotope_comps['IDPs'][8:]
     """
         ----------------------------------------------------------------------------------
     """
@@ -84,8 +131,8 @@ if __name__ == "__main__":
 
     nsteps = len(t)
     n_ode=3
-    #rand_numbers=np.random.rand((100000))
-    #rand_numbers2=np.random.rand((100000))
+    rand_numbers=np.random.rand((100000))
+    rand_numbers2=np.random.rand((100000))
     """
         ----------------------------------------------------------------------------------
     """
@@ -189,53 +236,67 @@ if __name__ == "__main__":
             isotopic_data.abundances1['Comets'][1][1] / \
             isotopic_data.abundances1['Comets'][1][0] * \
             isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0]
+            
         # also for the elemental composition:
-        mole_elements[0] += mass_added / MolW_atm[0]
-        mole_elements[1] += mass_added_asteroid / MolW_atm[0] * \
+        N=mole_elements[1:]
+        dN=[mass_added_asteroid / MolW_atm[0] * \
             isotopic_data.abundances1['Asteroids'][1][1] / \
             isotopic_data.abundances1['Asteroids'][1][0] * \
-            isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0] + \
-            mass_added_comet / MolW_atm[0] * \
-            isotopic_data.abundances1['Comets'][1][1] / \
-            isotopic_data.abundances1['Comets'][1][0] * \
-            isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0]
-        mole_elements[2] += mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0], \
+            mass_added_asteroid / MolW_atm[0] * \
             isotopic_data.abundances1['Asteroids'][1][2] / \
             isotopic_data.abundances1['Asteroids'][1][0] * \
-            isotopic_data.solar_abundances[2] / isotopic_data.solar_abundances[0] + \
+            isotopic_data.solar_abundances[2] / isotopic_data.solar_abundances[0], \
+            mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.abundances1['Asteroids'][1][3] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[3] / isotopic_data.solar_abundances[0], \
+            mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.abundances1['Asteroids'][1][4] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[4] / isotopic_data.solar_abundances[0], \
+            mass_added_asteroid / MolW_atm[0] * \
+            isotopic_data.abundances1['Asteroids'][1][5] / \
+            isotopic_data.abundances1['Asteroids'][1][0] * \
+            isotopic_data.solar_abundances[5] / isotopic_data.solar_abundances[0] ]
+            
+        dN2=[mass_added_comet / MolW_atm[0] * \
+            isotopic_data.abundances1['Comets'][1][1] / \
+            isotopic_data.abundances1['Comets'][1][0] * \
+            isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0], \
             mass_added_comet / MolW_atm[0] * \
             isotopic_data.abundances1['Comets'][1][2] / \
             isotopic_data.abundances1['Comets'][1][0] * \
-            isotopic_data.solar_abundances[2] / isotopic_data.solar_abundances[0]
-        mole_elements[3] += mass_added_asteroid / MolW_atm[0] * \
-            isotopic_data.abundances1['Asteroids'][1][3] / \
-            isotopic_data.abundances1['Asteroids'][1][0] * \
-            isotopic_data.solar_abundances[3] / isotopic_data.solar_abundances[0] + \
+            isotopic_data.solar_abundances[2] / isotopic_data.solar_abundances[0], \
             mass_added_comet / MolW_atm[0] * \
             isotopic_data.abundances1['Comets'][1][3] / \
             isotopic_data.abundances1['Comets'][1][0] * \
-            isotopic_data.solar_abundances[3] / isotopic_data.solar_abundances[0]
-        mole_elements[4] += mass_added_asteroid / MolW_atm[0] * \
-            isotopic_data.abundances1['Asteroids'][1][4] / \
-            isotopic_data.abundances1['Asteroids'][1][0] * \
-            isotopic_data.solar_abundances[4] / isotopic_data.solar_abundances[0] + \
+            isotopic_data.solar_abundances[3] / isotopic_data.solar_abundances[0], \
             mass_added_comet / MolW_atm[0] * \
             isotopic_data.abundances1['Comets'][1][4] / \
             isotopic_data.abundances1['Comets'][1][0] * \
-            isotopic_data.solar_abundances[4] / isotopic_data.solar_abundances[0]
-        mole_elements[5] += mass_added_asteroid / MolW_atm[0] * \
-            isotopic_data.abundances1['Asteroids'][1][5] / \
-            isotopic_data.abundances1['Asteroids'][1][0] * \
-            isotopic_data.solar_abundances[5] / isotopic_data.solar_abundances[0] + \
+            isotopic_data.solar_abundances[4] / isotopic_data.solar_abundances[0], \
             mass_added_comet / MolW_atm[0] * \
             isotopic_data.abundances1['Comets'][1][5] / \
             isotopic_data.abundances1['Comets'][1][0] * \
-            isotopic_data.solar_abundances[5] / isotopic_data.solar_abundances[0]
+            isotopic_data.solar_abundances[5] / isotopic_data.solar_abundances[0] ]
+            
+        mole_elements[0] += mass_added / MolW_atm[0]
+        mole_elements[1] += dN[0] + dN2[0]
+        mole_elements[2] += dN[1] + dN2[1]
+        mole_elements[3] += dN[2] + dN2[2]
+        mole_elements[4] += dN[3] + dN2[3]
+        mole_elements[5] += dN[4] + dN2[4]
             
             
-        
-        
         Matm = Natm*MolW_atm
+        
+        # isotope composition from impact replenishment due to asteroids see equation 11
+        isotopes_sim = \
+            isotopic_data.impact_replenishment(isotopes_sim, \
+                isotope_sources['Asteroids'], \
+                isotope_sources['Comets'], N, dN, dN2)
+        
 
         # 5. Sputtering and Photochemical escape
         # sputter each element / isotope: c (Co2), N (N2), Ne, Ar, Kr, Xe       
@@ -247,12 +308,19 @@ if __name__ == "__main__":
         Natm[1] = Natm[1] - 0.5*F_i_sp1[1] * tstep *86400*365/6.02e23
         Natm = np.maximum(Natm,0.)
         # now elements
+        N = mole_elements[1:]
+        dN = [F_i_sp1[1] * tstep *86400*365/6.02e23, \
+            F_i_sp1[2] * tstep *86400*365/6.02e23, \
+            F_i_sp1[3] * tstep *86400*365/6.02e23, \
+            F_i_sp1[4] * tstep *86400*365/6.02e23, \
+            F_i_sp1[5] * tstep *86400*365/6.02e23]
         mole_elements[0] = mole_elements[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
-        mole_elements[1] = mole_elements[1] - F_i_sp1[1] * tstep *86400*365/6.02e23
-        mole_elements[2] = mole_elements[2] - F_i_sp1[2] * tstep *86400*365/6.02e23
-        mole_elements[3] = mole_elements[3] - F_i_sp1[3] * tstep *86400*365/6.02e23
-        mole_elements[4] = mole_elements[4] - F_i_sp1[4] * tstep *86400*365/6.02e23
-        mole_elements[5] = mole_elements[5] - F_i_sp1[5] * tstep *86400*365/6.02e23
+        mole_elements[1] = mole_elements[1] - dN[0]
+        mole_elements[2] = mole_elements[2] - dN[1]
+        mole_elements[3] = mole_elements[3] - dN[2]
+        mole_elements[4] = mole_elements[4] - dN[3]
+        mole_elements[5] = mole_elements[5] - dN[4]
+        
         
         
         # 5b photochemical escape
@@ -260,19 +328,28 @@ if __name__ == "__main__":
         Fcph = photo_chemical.carbon_escape((t[i]-tinit)/1e9,\
             (t[i+1]-tinit)/1e9,(-tinit)/1e9) / 6.02e23
         # nitrogen - rate of escape
-        (fn2_1,fn2_2,fn2_3)=photo_chemical.nitrogen_escape(np.maximum(Natm[0],1e-3),Natm[1],euv_flux,Amars)
+        (fn2_1,fn2_2,fn2_3)=photo_chemical.nitrogen_escape(\
+            np.maximum(Natm[0],1e-3),Natm[1],euv_flux,Amars)
         # total loss rate
         fn2 = fn2_1+fn2_2+fn2_3
+        dN2 =[fn2*tstep*86400*365/6.02e23 ,0., 0.,0.,0.]
         Natm[0] = Natm[0] - Fcph*tstep*86400*365/6.02e23
-        Natm[1] = Natm[1] - fn2*tstep*86400*365/6.02e23
+        Natm[1] = Natm[1] - dN2[0]
         mole_elements[0] -= Fcph*tstep*86400*365/6.02e23
-        mole_elements[1] -= fn2*tstep*86400*365/6.02e23 * 2
+        mole_elements[1] -= dN2[0] * 2
         Matm = Natm * MolW_atm
+
+        #isotopes_sim = isotopic_data.escape_fract(isotopes_sim, N, dN, dN2, Rdiff_sim)
         
         
         
-        # 5c IDPs - just table 3, Kurokawa et al.
-        mole_elements[2:] += IDP_rate_moles*tstep / 1e9
+        # 5c IDPs - just table 3, Kurokawa et al. and fractionation
+        N = mole_elements[2:]
+        dN = IDP_rate_moles*tstep / 1e9
+        mole_elements[2:] += dN
+        
+        isotopes_sim[1:] = isotopic_data.continuous_sources(isotopes_sim[1:], \
+            isotope_sources['IDPs'][1:], N, dN)
         
         
         
@@ -285,7 +362,7 @@ if __name__ == "__main__":
         Matm = Matm + np.array([co2,n2,h2o])*MolW_atm*tstep*86400*365/6.02e23
         Matm[2] = np.minimum(Matm[2]*grav_mars/Amars,ph2o)*Amars/grav_mars
         Natm = Matm / MolW_atm
-        # 7. Isotope fractionation. 
+        
         
         
         
@@ -305,8 +382,19 @@ if __name__ == "__main__":
         
         
         Natm = Matm / MolW_atm
+        N= mole_elements[1:]
+        dN = [2*n2*tstep*86400*365/6.02e23]
+        dN.extend(co2*tstep*86400*365/6.02e23* \
+            isotopic_data.abundances1['Volcanic degassing'][1][2:] / \
+            isotopic_data.abundances1['Volcanic degassing'][1][0] * \
+            isotopic_data.solar_abundances[2:] / isotopic_data.solar_abundances[0])
+            
         mole_elements[0] += co2*tstep*86400*365/6.02e23
-        mole_elements[1] += 2*n2*tstep*86400*365/6.02e23
+        mole_elements[1] += dN[0]
+        mole_elements[2:] += np.array(dN[1:])
+        # 7. Isotope fractionation. need to add elemnents also
+        isotopes_sim = isotopic_data.continuous_sources(isotopes_sim, \
+            isotope_sources['Volcanic degassing'], N, dN)
         
         # update scale height
         Hscale=Rgas*tmars/(np.sum(Matm)/np.sum(Natm)*grav_mars) # scale height - m - may change???

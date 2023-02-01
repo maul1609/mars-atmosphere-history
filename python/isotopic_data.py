@@ -50,6 +50,15 @@ isotopes = ['d15N',
             '132Xe/130Xe',
             '134Xe/130Xe',
             '136Xe/130Xe']
+            
+isotopes[1] = '22Ne/20Ne'
+isotopes[2] = '38Ar/36Ar'
+isotopes[3] = '78Kr/80Kr'
+isotopes[4] = '82Kr/80Kr'
+isotopes[5] = '83Kr/80Kr'
+isotopes[6] = '84Kr/80Kr'
+isotopes[7] = '86Kr/80Kr'
+
 isotope_comps = dict()
 isotope_comps['Mars'] = [572,10.1,4.2,6.37e-3,4.09e-2,0.2054,\
                          0.2034,0.3006,2.45e-2,2.12e-2,0.4767, \
@@ -70,6 +79,73 @@ isotope_comps['Comets'] = [1000,13.7,5.4,6.470e-3,4.124e-2,0.20629,0.20340,\
 isotope_comps['IDPs'] = [np.nan, 13.7,5.8,6.470e-3,4.124e-2,0.20629,0.20340,\
                         0.29915,2.947e-2,2.541e-2,0.50873,6.287,4.9958, \
                         6.0479,2.1288,1.6634]
+
+
+isotope_comps['Mars'][1]=1./isotope_comps['Mars'][1]
+isotope_comps['Mars'][2]=1./isotope_comps['Mars'][2]
+rat1 = isotope_comps['Mars'][3] # 78/84
+rat2 = isotope_comps['Mars'][4] # 80/84
+rat3 = isotope_comps['Mars'][5] # 82 /84
+rat4 = isotope_comps['Mars'][6] # 83 /84
+rat4 = isotope_comps['Mars'][7] # 86 /84
+isotope_comps['Mars'][3]=rat1 / rat2 # 78 /80
+isotope_comps['Mars'][4]=rat3 / rat2 # 82 /80
+isotope_comps['Mars'][5]=rat4 / rat2 # 83 /80
+isotope_comps['Mars'][6]=1./rat2 # 84/80
+isotope_comps['Mars'][7]=rat4 / rat2 # 86/80
+
+isotope_comps['Volcanic degassing'][1]=1./isotope_comps['Volcanic degassing'][1]
+isotope_comps['Volcanic degassing'][2]=1./isotope_comps['Volcanic degassing'][2]
+rat1 = isotope_comps['Volcanic degassing'][3] # 78/84
+rat2 = isotope_comps['Volcanic degassing'][4] # 80/84
+rat3 = isotope_comps['Volcanic degassing'][5] # 82 /84
+rat4 = isotope_comps['Volcanic degassing'][6] # 83 /84
+rat4 = isotope_comps['Volcanic degassing'][7] # 86 /84
+isotope_comps['Volcanic degassing'][3]=rat1 / rat2 # 78 /80
+isotope_comps['Volcanic degassing'][4]=rat3 / rat2 # 82 /80
+isotope_comps['Volcanic degassing'][5]=rat4 / rat2 # 83 /80
+isotope_comps['Volcanic degassing'][6]=1./rat2 # 84/80
+isotope_comps['Volcanic degassing'][7]=rat4 / rat2 # 86/80
+
+isotope_comps['Asteroids'][1]=1./isotope_comps['Asteroids'][1]
+isotope_comps['Asteroids'][2]=1./isotope_comps['Asteroids'][2]
+rat1 = isotope_comps['Asteroids'][3] # 78/84
+rat2 = isotope_comps['Asteroids'][4] # 80/84
+rat3 = isotope_comps['Asteroids'][5] # 82 /84
+rat4 = isotope_comps['Asteroids'][6] # 83 /84
+rat4 = isotope_comps['Asteroids'][7] # 86 /84
+isotope_comps['Asteroids'][3]=rat1 / rat2 # 78 /80
+isotope_comps['Asteroids'][4]=rat3 / rat2 # 82 /80
+isotope_comps['Asteroids'][5]=rat4 / rat2 # 83 /80
+isotope_comps['Asteroids'][6]=1./rat2 # 84/80
+isotope_comps['Asteroids'][7]=rat4 / rat2 # 86/80
+
+isotope_comps['Comets'][1]=1./isotope_comps['Comets'][1]
+isotope_comps['Comets'][2]=1./isotope_comps['Comets'][2]
+rat1 = isotope_comps['Comets'][3] # 78/84
+rat2 = isotope_comps['Comets'][4] # 80/84
+rat3 = isotope_comps['Comets'][5] # 82 /84
+rat4 = isotope_comps['Comets'][6] # 83 /84
+rat4 = isotope_comps['Comets'][7] # 86 /84
+isotope_comps['Comets'][3]=rat1 / rat2 # 78 /80
+isotope_comps['Comets'][4]=rat3 / rat2 # 82 /80
+isotope_comps['Comets'][5]=rat4 / rat2 # 83 /80
+isotope_comps['Comets'][6]=1./rat2 # 84/80
+isotope_comps['Comets'][7]=rat4 / rat2 # 86/80
+
+isotope_comps['IDPs'][1]=1./isotope_comps['IDPs'][1]
+isotope_comps['IDPs'][2]=1./isotope_comps['IDPs'][2]
+rat1 = isotope_comps['IDPs'][3] # 78/84
+rat2 = isotope_comps['IDPs'][4] # 80/84
+rat3 = isotope_comps['IDPs'][5] # 82 /84
+rat4 = isotope_comps['IDPs'][6] # 83 /84
+rat4 = isotope_comps['IDPs'][7] # 86 /84
+isotope_comps['IDPs'][3]=rat1 / rat2 # 78 /80
+isotope_comps['IDPs'][4]=rat3 / rat2 # 82 /80
+isotope_comps['IDPs'][5]=rat4 / rat2 # 83 /80
+isotope_comps['IDPs'][6]=1./rat2 # 84/80
+isotope_comps['IDPs'][7]=rat4 / rat2 # 86/80
+
 
 
 def set_amount_of_element(carbon_moles):
@@ -117,6 +193,42 @@ def set_amount_of_element(carbon_moles):
     return ([carbon_moles,n2_moles],n_moles)
     
 
+def continuous_sources(Imn, Imn0, N, dN):
+    Imn_new=[None]*len(Imn)
+    # equation 10
+    for m in range(len(Imn)):
+        Imn_new[m] = [None] * len(Imn[m])
+        for n in range(len(Imn[m])):
+            Imn_new[m][n]=Imn[m][n]+(Imn0[m][n]-Imn[m][n])*np.sum(Imn[m]) / \
+                np.sum(Imn0[m]) * dN[m] / N[m]
+
+    return Imn_new
+    
+
+
+    
+def impact_replenishment(Imn, Imn0_asteroids, Imn0_comets, N, dN, dN2):
+    Imn_new=[None]*len(Imn)
+    # asteroids eqaution 11
+    for m in range(len(Imn)):
+        Imn_new[m] = [None] * len(Imn[m])
+        for n in range(len(Imn[m])):
+            Imn_new[m][n]=(Imn[m][n]*np.sum(Imn0_asteroids[m])*N[m] + \
+                Imn0_asteroids[m][n]*np.sum(Imn[m])*dN[m]) / \
+                (np.sum(Imn0_asteroids[m])*N[m] + np.sum(Imn[m])*dN[m])
+
+    Imn_new2=[None]*len(Imn)
+    # comets
+    N += dN
+    for m in range(len(Imn)):
+        Imn_new2[m] = [None] * len(Imn[m])
+        for n in range(len(Imn[m])):
+            Imn_new2[m][n]=(Imn_new[m][n]*np.sum(Imn0_comets[m])*N[m] + \
+                Imn0_comets[m][n]*np.sum(Imn_new[m])*dN2[m]) / \
+                (np.sum(Imn0_comets[m])*N[m] + np.sum(Imn_new[m])*dN2[m])
+
+    return Imn_new2
+    
 if __name__ == "__main__":
     """
         plot
