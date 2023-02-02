@@ -47,7 +47,7 @@ def carbon_escape(age_young,age_old,maxage):
     
     # but integrate and divide by timestep
     Fcph = 7.9e23 * \
-        (age_old**0.86 - age_young**0.86)/(maxage**-0.86) / (age_old-age_young) / \
+        (age_old**0.14 - age_young**0.14)/(age_old-age_young) / 0.14 /\
         maxage**-0.86
     return Fcph
     

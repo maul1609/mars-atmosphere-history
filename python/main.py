@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 from scipy.integrate import solve_ivp
 from scipy.integrate import odeint
 import crater_chronology
@@ -58,9 +59,9 @@ if __name__ == "__main__":
     # IDP rates, table 2
     IDP_rate_moles = IDPs.get_mole(['Ne','Ar','Kr','Xe'],Ne=C_Ne_IDP)
     
-    isotope_comps_sim = np.array(isotopic_data.isotope_comps['Volcanic degassing'])
+    isotope_comps_sim = np.array(isotopic_data.isotope_comps['Volcanic degassing']).copy()
     ind,=np.where(['Xe' in iso for iso in isotopic_data.isotopes])
-    isotope_comps_sim[ind]=np.array(isotopic_data.isotope_comps['Mars'])[ind]
+    isotope_comps_sim[ind]=np.array(isotopic_data.isotope_comps['Mars'])[ind].copy()
     isotopes = [None]*5
     isotopes[0] = [isotopic_data.isotopes[0]]
     isotopes[1] = [isotopic_data.isotopes[1]]
@@ -108,6 +109,15 @@ if __name__ == "__main__":
     isotope_sources['IDPs'][2] = [isotopic_data.isotope_comps['IDPs'][2]]
     isotope_sources['IDPs'][3] = isotopic_data.isotope_comps['IDPs'][3:8]
     isotope_sources['IDPs'][4] = isotopic_data.isotope_comps['IDPs'][8:]
+    
+    isotope_mass =[None]*5
+    isotope_mass[0] = [isotopic_data.isotope_mass[0]]
+    isotope_mass[1] = [isotopic_data.isotope_mass[1]]
+    isotope_mass[2] = [isotopic_data.isotope_mass[2]]
+    isotope_mass[3] = isotopic_data.isotope_mass[3:8]
+    isotope_mass[4] = isotopic_data.isotope_mass[8:]
+    element_mass = isotopic_data.element_mass[1:]
+    Rdiffs_isotopes = MarsSputtering_Calc6_7.calculate_rdiffs(element_mass,isotope_mass)
     """
         ----------------------------------------------------------------------------------
     """
@@ -130,7 +140,7 @@ if __name__ == "__main__":
     t = np.mgrid[tinit:tfinal+tstep:tstep]
 
     nsteps = len(t)
-    n_ode=3
+    n_ode=4
     rand_numbers=np.random.rand((100000))
     rand_numbers2=np.random.rand((100000))
     """
@@ -197,7 +207,8 @@ if __name__ == "__main__":
         xi=np.maximum(impactor_atmos_loss_gain_eq4_5. \
             dimensionless_xi(diams,rho_t,rho_pr, vels, uesc, Hscale, rho_0)  , 1.e-10) 
         deltaM=impactor_atmos_loss_gain_eq4_5.change_atmos(xi,vels,uesc,mass)
-        
+#         deltaM=impactor_atmos_loss_gain_eq4_5.fractional_change_atmos(xi,vels,uesc)
+#         deltaM = deltaM*np.sum(Natm*MolW_atm)
         
         # left in the projectiles is (1-Xpr)*mass, but then only a certain % of this 
         Xpr=np.maximum(impactor_atmos_loss_gain_eq4_5. \
@@ -217,8 +228,9 @@ if __name__ == "__main__":
         
         #deltaM=deltaM-Xpr*mass*0.01
         dM = np.sum(deltaM)*scaling
-        const1 = dM / np.sum(MolW_atm*Natm)
-        Natm = Natm - const1*Natm
+#         dM = np.sum(Matm)*(1.-dM1)
+        const1 = np.minimum(dM / np.sum(Natm*MolW_atm),0.5)
+        Natm = Natm *(1.- const1)
         # remove elements in the impact too
         mole_elements = mole_elements*(1.-const1)
         
@@ -226,9 +238,9 @@ if __name__ == "__main__":
         
         
         # 4a add the carbon dioxide outgassed from asteroids and comets
-        Natm[0] += mass_added / MolW_atm[0]
+        Natm[0] = Natm[0]+mass_added / MolW_atm[0]
         # molecular nitrogen
-        Natm[1] += 0.5 * mass_added_asteroid / MolW_atm[0]* \
+        Natm[1] = Natm[1]+0.5 * mass_added_asteroid / MolW_atm[0]* \
             isotopic_data.abundances1['Asteroids'][1][1] / \
             isotopic_data.abundances1['Asteroids'][1][0] * \
             isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0] + \
@@ -238,7 +250,7 @@ if __name__ == "__main__":
             isotopic_data.solar_abundances[1] / isotopic_data.solar_abundances[0]
             
         # also for the elemental composition:
-        N=mole_elements[1:]
+        N=mole_elements[1:].copy()
         dN=[mass_added_asteroid / MolW_atm[0] * \
             isotopic_data.abundances1['Asteroids'][1][1] / \
             isotopic_data.abundances1['Asteroids'][1][0] * \
@@ -281,12 +293,12 @@ if __name__ == "__main__":
             isotopic_data.abundances1['Comets'][1][0] * \
             isotopic_data.solar_abundances[5] / isotopic_data.solar_abundances[0] ]
             
-        mole_elements[0] += mass_added / MolW_atm[0]
-        mole_elements[1] += dN[0] + dN2[0]
-        mole_elements[2] += dN[1] + dN2[1]
-        mole_elements[3] += dN[2] + dN2[2]
-        mole_elements[4] += dN[3] + dN2[3]
-        mole_elements[5] += dN[4] + dN2[4]
+        mole_elements[0] = mole_elements[0]+mass_added / MolW_atm[0]
+        mole_elements[1] = mole_elements[1]+dN[0] + dN2[0]
+        mole_elements[2] = mole_elements[2]+dN[1] + dN2[1]
+        mole_elements[3] = mole_elements[3]+dN[2] + dN2[2]
+        mole_elements[4] = mole_elements[4]+dN[3] + dN2[3]
+        mole_elements[5] = mole_elements[5]+dN[4] + dN2[4]
             
             
         Matm = Natm*MolW_atm
@@ -300,27 +312,30 @@ if __name__ == "__main__":
 
         # 5. Sputtering and Photochemical escape
         # sputter each element / isotope: c (Co2), N (N2), Ne, Ar, Kr, Xe       
-        (euv_flux, f_co2_flux) = sputtering_co2.sputtering_co2_rate(-t[i]/1e9)
+        (euv_flux, f_co2_flux) = sputtering_co2.sputtering_co2_rate((t[i]-tinit)/1e9)
         F_i_sp1=MarsSputtering_Calc6_7.F_i_sp(f_co2_flux, \
             mole_elements,Natm[0],['C','N','Ne','Ar','Kr','Xe'])
-        # CO2 and N2
-        Natm[0] = Natm[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
-        Natm[1] = Natm[1] - 0.5*F_i_sp1[1] * tstep *86400*365/6.02e23
-        Natm = np.maximum(Natm,0.)
-        # now elements
-        N = mole_elements[1:]
-        dN = [F_i_sp1[1] * tstep *86400*365/6.02e23, \
-            F_i_sp1[2] * tstep *86400*365/6.02e23, \
-            F_i_sp1[3] * tstep *86400*365/6.02e23, \
-            F_i_sp1[4] * tstep *86400*365/6.02e23, \
-            F_i_sp1[5] * tstep *86400*365/6.02e23]
-        mole_elements[0] = mole_elements[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
-        mole_elements[1] = mole_elements[1] - dN[0]
-        mole_elements[2] = mole_elements[2] - dN[1]
-        mole_elements[3] = mole_elements[3] - dN[2]
-        mole_elements[4] = mole_elements[4] - dN[3]
-        mole_elements[5] = mole_elements[5] - dN[4]
-        
+        # CO2 and N2 - only after 4.1 Gyr
+        if(-t[i]/1e9<4.1):
+            Natm[0] = Natm[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
+            Natm[1] = Natm[1] - 0.5*F_i_sp1[1] * tstep *86400*365/6.02e23
+            #Natm = np.maximum(Natm,0.)
+            # now elements
+            N = mole_elements[1:].copy().tolist()
+            dN = [F_i_sp1[1] * tstep *86400*365/6.02e23, \
+                F_i_sp1[2] * tstep *86400*365/6.02e23, \
+                F_i_sp1[3] * tstep *86400*365/6.02e23, \
+                F_i_sp1[4] * tstep *86400*365/6.02e23, \
+                F_i_sp1[5] * tstep *86400*365/6.02e23]
+            mole_elements[0] = mole_elements[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
+            mole_elements[1] = mole_elements[1] - dN[0]
+            mole_elements[2] = mole_elements[2] - dN[1]
+            mole_elements[3] = mole_elements[3] - dN[2]
+            mole_elements[4] = mole_elements[4] - dN[3]
+            mole_elements[5] = mole_elements[5] - dN[4]
+        else: 
+            N = mole_elements[1:].copy().tolist()
+            dN =[0]*len(N)  
         
         
         # 5b photochemical escape
@@ -335,18 +350,18 @@ if __name__ == "__main__":
         dN2 =[fn2*tstep*86400*365/6.02e23 ,0., 0.,0.,0.]
         Natm[0] = Natm[0] - Fcph*tstep*86400*365/6.02e23
         Natm[1] = Natm[1] - dN2[0]
-        mole_elements[0] -= Fcph*tstep*86400*365/6.02e23
-        mole_elements[1] -= dN2[0] * 2
+        mole_elements[0] = mole_elements[0] - Fcph*tstep*86400*365/6.02e23
+        mole_elements[1] = mole_elements[1] - dN2[0] * 2
         Matm = Natm * MolW_atm
 
-        #isotopes_sim = isotopic_data.escape_fract(isotopes_sim, N, dN, dN2, Rdiff_sim)
+        isotopes_sim = isotopic_data.escape_fr(isotopes_sim, N, dN, dN2, Rdiffs_isotopes)
         
         
         
         # 5c IDPs - just table 3, Kurokawa et al. and fractionation
-        N = mole_elements[2:]
+        N = mole_elements[2:].copy()
         dN = IDP_rate_moles*tstep / 1e9
-        mole_elements[2:] += dN
+        mole_elements[2:] = mole_elements[2:] + np.array(dN)
         
         isotopes_sim[1:] = isotopic_data.continuous_sources(isotopes_sim[1:], \
             isotope_sources['IDPs'][1:], N, dN)
@@ -382,30 +397,33 @@ if __name__ == "__main__":
         
         
         Natm = Matm / MolW_atm
-        N= mole_elements[1:]
-        dN = [2*n2*tstep*86400*365/6.02e23]
+        N= mole_elements[1:].copy()
+        dN = [2.*n2*tstep*86400*365/6.02e23]
         dN.extend(co2*tstep*86400*365/6.02e23* \
             isotopic_data.abundances1['Volcanic degassing'][1][2:] / \
             isotopic_data.abundances1['Volcanic degassing'][1][0] * \
             isotopic_data.solar_abundances[2:] / isotopic_data.solar_abundances[0])
             
-        mole_elements[0] += co2*tstep*86400*365/6.02e23
-        mole_elements[1] += dN[0]
-        mole_elements[2:] += np.array(dN[1:])
+        mole_elements[0] = mole_elements[0] + co2*tstep*86400*365/6.02e23
+        mole_elements[1] = mole_elements[1] + dN[0]
+        mole_elements[2:] = mole_elements[2:] + np.array(dN[1:])
         # 7. Isotope fractionation. need to add elemnents also
         isotopes_sim = isotopic_data.continuous_sources(isotopes_sim, \
             isotope_sources['Volcanic degassing'], N, dN)
         
         # update scale height
         Hscale=Rgas*tmars/(np.sum(Matm)/np.sum(Natm)*grav_mars) # scale height - m - may change???
-        
+        Matm = Natm *MolW_atm
         #ystore[i+1,0]=sol[-1,0]
         ystore[i+1,1]=Patm
+        ystore[i+1,2]=(isotopes_sim[0][0]/(3676.5e-6)-1.)*1000.
+        ystore[i+1,3]=mole_elements[1]
         
         if ((t[i]-last_output)>=output_interval):
             print('time: ' + str(t[i]/1e9) + '; num impacts 1: ' + str(num_impactor1) + \
                 '; num impacts 20: ' + str(num_impactor20) + '; ratio: ' + \
-                 str(num_impactor1/num_impactor20) + '; Patm: ' + str(Patm) )
+                 str(num_impactor1/num_impactor20) + '; Patm: ' + str(Patm) + \
+                 '; d15N: ' + str(ystore[i+1,2]) + '; euv: ' + str(euv_flux) )
             last_output = t[i]
 
     print('Final time: ' + str(t[-1]/1e9))

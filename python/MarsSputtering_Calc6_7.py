@@ -34,7 +34,19 @@ amus['Ar'] = 36
 amus['Kr'] = 84
 amus['Xe'] = 130
 
-
+def calculate_rdiffs(element_mass,isotope_mass):
+    """
+       easy way of calculating Rdiffs factors 
+    """
+    Rdiffs = [None]*len(element_mass)
+    for i in range(len(element_mass)):
+        Rdiffs[i] = [None]*len(isotope_mass[i])
+        for j in range(len(isotope_mass[i])):
+            delta_m=(element_mass[i]-isotope_mass[i][j])*amu
+            Rdiffs[i][j] = R_diffij(delta_m,g_mars,deltaz,T)
+            
+    return Rdiffs
+    
 def F_i_sp(F_CO2,N_i,N_CO2,elements):
     """
     See equation 6 from Kurokawa et al (2018)
@@ -67,7 +79,7 @@ def F_i_sp(F_CO2,N_i,N_CO2,elements):
     
     alpha1 = alpha(N_i, N_CO2, R_diff)
     
-    F_i_sp1=(F_CO2*(Y_i/Y_CO2)*(N_i/N_CO2)*(R_diff)*(1/alpha1))
+    F_i_sp1=(F_CO2*(Y_i/Y_CO2)*(N_i/N_CO2)*(R_diff)*(1./alpha1))
     
     return F_i_sp1
 
