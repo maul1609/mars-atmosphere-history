@@ -118,6 +118,7 @@ if __name__ == "__main__":
     isotope_mass[4] = isotopic_data.isotope_mass[8:]
     element_mass = isotopic_data.element_mass[1:]
     Rdiffs_isotopes = MarsSputtering_Calc6_7.calculate_rdiffs(element_mass,isotope_mass)
+    Rdiffs_isotopes[0][0]=1.43
     """
         ----------------------------------------------------------------------------------
     """
@@ -136,9 +137,11 @@ if __name__ == "__main__":
     Matm = Natm *MolW_atm  # mass of co2, n2, h2o
 #     Natm = Matm / MolW_atm     # number of moles of co2, n2, h2o
     ph2o = svp_ice.svp_ice01(tmars)
+    Ninit=Natm[1]
     Hscale=Rgas*tmars/(np.sum(Matm)/np.sum(Natm)*grav_mars) # scale height - m - may change???
     t = np.mgrid[tinit:tfinal+tstep:tstep]
 
+    (euv_max, f_co2_flux_max) = sputtering_co2.sputtering_co2_rate((t[0]-tinit)/1e9)
     nsteps = len(t)
     n_ode=4
     rand_numbers=np.random.rand((100000))
@@ -344,10 +347,11 @@ if __name__ == "__main__":
             (t[i+1]-tinit)/1e9,(-tinit)/1e9) / 6.02e23
         # nitrogen - rate of escape
         (fn2_1,fn2_2,fn2_3)=photo_chemical.nitrogen_escape(\
-            np.maximum(Natm[0],1e-3),Natm[1],euv_flux,Amars)
+            np.maximum(Natm[0],1e-3),Natm[1],np.minimum(euv_flux,6),1.,Amars, Hscale)
         # total loss rate
-        fn2 = fn2_1+fn2_2+fn2_3
+        fn2 = (fn2_1+fn2_2+fn2_3)*Natm[1]/Ninit
         dN2 =[fn2*tstep*86400*365/6.02e23 ,0., 0.,0.,0.]
+#         dN2[0]=0.
         Natm[0] = Natm[0] - Fcph*tstep*86400*365/6.02e23
         Natm[1] = Natm[1] - dN2[0]
         mole_elements[0] = mole_elements[0] - Fcph*tstep*86400*365/6.02e23
