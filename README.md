@@ -17,7 +17,7 @@ This Python model is based on the paper by Kurokawa et al. (2018, [here](http://
 
 The model starts 4.5 billion years ago with an initial atmospheric pressure (usually 1.5 bar), and solves for the evolution of the atmosphere up until the current day. The initial isotope abundance is assumed to be volcanic. Evolution over time is calculated by dividing the time period into smaller time-steps and incrementing variables over these time-steps. Typically, the time-steps are around 1 million years. 
 
-Over a time-step the number of impacts are calculated using a crater chronology model. This number is scaled so that, over the whole 4.5 billion years, the total impactor mass equals some predefined value (normally 2 $\times$ 10<sup>21</sup>} kg).
+Over a time-step the number of impacts are calculated using a crater chronology model. This number is scaled so that, over the whole 4.5 billion years, the total impactor mass equals some predefined value (normally 2 $\times$ 10<sup>21</sup> kg).
 
 Each impact has a size distribution and velocity distribution individually sampled from separate size and velocity distributions using Monte Carlo sampling. For each impact, during a time interval, we calculate the loss of the atmosphere due to atmospheric eroson. We also assume a volatile fraction of the impactor and add this to the atmosphere. Depending on the impactor type (asteroid or comet) we add elemental trace abundances to the atmosphere. Not only do we add the elemental abundances, but also the isotope composition for the different sources (e.g. the ratios of isotopes of the same element).
 
