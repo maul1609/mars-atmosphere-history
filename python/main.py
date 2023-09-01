@@ -13,6 +13,7 @@ import MarsSputtering_Calc6_7
 import isotopic_data
 import photo_chemical
 import IDPs
+import mars_temp_forget
 
 """
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
@@ -45,8 +46,10 @@ if __name__ == "__main__":
     C_vol = 5.
     C_Ne_IDP = 10.
     
+    Obliquity=20. # the obliquity of mars
+    
     rho_pr=2600. # density of impactor
-    Pcollapse = 0.5
+    Pcollapse = mars_temp_forget.meanPvObliquity(Obliquity)
     sampleFlag = 0 # 0=once, 1=every time-step; 
     
     total_impactor_mass = 2.e21 # kg
@@ -171,6 +174,7 @@ if __name__ == "__main__":
     """
 
     print(total_impactor_mass/np.sum(mass))
+    print('Note, the pressure for atmospheric collapse is ' + str(Pcollapse))
     #nsteps=0
 
     """
@@ -385,12 +389,19 @@ if __name__ == "__main__":
         
         
         
-        # readjust Matm
-        Patm = np.maximum(np.sum(Matm)*grav_mars/Amars/1.e5, 6e-3)
+        # readjust Matm: firstly it cant go above the svp from Forget et al:
+        if(Matm[0]*grav_mars/Amars/1.e5 > mars_temp_forget.data['collapse2']):
+        	Matm[0]=mars_temp_forget.data['collapse2']*Amars*1e5/grav_mars
+
+
+        # readjust Matm: secondly it cant go below 6e-3 (observed):
+        Patm = np.maximum(np.sum(Matm)*grav_mars/Amars/1.e5, 6e-3)        
         # if Patm < 0.5 bar - the CO2 condenses at the poles - only the CO2 so will have 
         # to wait to do properly. e.g. need to know how lack of absorption by CO2 will affect 
         # temperature, and then link this to the clausius clapeyron equation
         # same for water vapour really, perhaps having a reservoir
+		# readjust Matm: thirdly it cant go below the threshold where it collapses due to
+		# radiative effect forget et al:
         if(Patm < Pcollapse):
             Patm = 6.e-3
             Matm[0] = Patm*1e5*Amars / grav_mars # mass of atmosphere
@@ -424,11 +435,14 @@ if __name__ == "__main__":
         ystore[i+1,3]=mole_elements[1]
         
         if ((t[i]-last_output)>=output_interval):
-            print('time: ' + str(t[i]/1e9) + '; num impacts 1: ' + str(num_impactor1) + \
+        	# calculate the temperature global mean from Forget et al.
+        	tglobal = mars_temp_forget.meanTvP1(Patm)
+        	print('time: ' + str(t[i]/1e9) + '; num impacts 1: ' + str(num_impactor1) + \
                 '; num impacts 20: ' + str(num_impactor20) + '; ratio: ' + \
                  str(num_impactor1/num_impactor20) + '; Patm: ' + str(Patm) + \
-                 '; d15N: ' + str(ystore[i+1,2]) + '; euv: ' + str(euv_flux) )
-            last_output = t[i]
+                 '; d15N: ' + str(ystore[i+1,2]) + '; euv: ' + str(euv_flux) + \
+                 '; tg: ' + str(tglobal) )
+        	last_output = t[i]
 
     print('Final time: ' + str(t[-1]/1e9))
     """
