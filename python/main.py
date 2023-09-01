@@ -392,7 +392,8 @@ if __name__ == "__main__":
         # readjust Matm: firstly it cant go above the svp from Forget et al:
         if(Matm[0]*grav_mars/Amars/1.e5 > mars_temp_forget.data['collapse2']):
         	Matm[0]=mars_temp_forget.data['collapse2']*Amars*1e5/grav_mars
-
+            Patm = np.sum(Matm)*grav_mars/(Amars)/1e5
+			mole_elements[0] = Matm[0] / MolW_atm[0]
 
         # readjust Matm: secondly it cant go below 6e-3 (observed):
         Patm = np.maximum(np.sum(Matm)*grav_mars/Amars/1.e5, 6e-3)        
