@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import copy
 from scipy.integrate import solve_ivp
@@ -26,10 +27,13 @@ def test(y,t,omega):
 
 
 if __name__ == "__main__":
-
     """
         initial conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
+    
+    if(len(sys.argv)>1):
+    	file1=sys.argv[1]
+    	
     Patm = 1.5 # initial pressure in most calculations - section 2.9, pp449
     tinit=-4.5e9 
     Rmars=3389.5e3 # m
@@ -392,8 +396,8 @@ if __name__ == "__main__":
         # readjust Matm: firstly it cant go above the svp from Forget et al:
         if(Matm[0]*grav_mars/Amars/1.e5 > mars_temp_forget.data['collapse2']):
         	Matm[0]=mars_temp_forget.data['collapse2']*Amars*1e5/grav_mars
-            Patm = np.sum(Matm)*grav_mars/(Amars)/1e5
-			mole_elements[0] = Matm[0] / MolW_atm[0]
+        	Patm = np.sum(Matm)*grav_mars/(Amars)/1e5
+        	mole_elements[0] = Matm[0] / MolW_atm[0]
 
         # readjust Matm: secondly it cant go below 6e-3 (observed):
         Patm = np.maximum(np.sum(Matm)*grav_mars/Amars/1.e5, 6e-3)        
@@ -450,7 +454,9 @@ if __name__ == "__main__":
         ----------------------------------------------------------------------------------
     """
     
-    
+    if(len(sys.argv)>1):
+    	np.savez(file1,t=t,Patm=ystore[:,1],dN=ystore[:,2],mole1=ystore[:,3])
+    	print(file1)
     
 
     """
