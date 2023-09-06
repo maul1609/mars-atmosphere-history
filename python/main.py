@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     (euv_max, f_co2_flux_max) = sputtering_co2.sputtering_co2_rate((t[0]-tinit)/1e9)
     nsteps = len(t)
-    n_ode=4
+    n_ode=10
     rand_numbers=np.random.rand((100000))
     rand_numbers2=np.random.rand((100000))
     """
@@ -161,8 +161,14 @@ if __name__ == "__main__":
         set-up arrays ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
     ystore=np.zeros((nsteps,n_ode))
-    ystore[0,0]=1.
-    ystore[0,1]=Patm
+    ystore[0,0]=Patm										# Patm
+    ystore[0,1]=(isotopes_sim[0][0]/(3676.5e-6)-1.)*1000.	# d15N
+    ystore[0,2]=isotopes_sim[1][0]							# 22Ne/20Ne
+    ystore[0,3]=isotopes_sim[2][0]							# 38Ar/36Ar
+    ystore[0,4]=isotopes_sim[3][4]							# 86Kr/84Kr
+    ystore[0,5]=isotopes_sim[4][7]							# 136Xe/130Xe
+    ystore[0,6]=mars_temp_forget.meanTvP1(Patm)				# tglobal
+    
     # sample the sizes of the impactors
     diams, mass = impactor_model.sample_sizes(rand_numbers, rho_pr)
     # sample the impact velocities - not sure if this should be a different random number
@@ -194,9 +200,6 @@ if __name__ == "__main__":
             vels = impactor_velocity.inv_cdf1(rand_numbers2)
         
         
-        # solve ODEs
-        #y0 = ystore[i,0:2]
-        #sol = odeint(test, y0, [t[i], t[i+1]], args=(omega,) )
         
         # 1. collapse? 0.5 bar and assumed to be 6 mbar
         
@@ -434,14 +437,18 @@ if __name__ == "__main__":
         # update scale height
         Hscale=Rgas*tmars/(np.sum(Matm)/np.sum(Natm)*grav_mars) # scale height - m - may change???
         Matm = Natm *MolW_atm
-        #ystore[i+1,0]=sol[-1,0]
-        ystore[i+1,1]=Patm
-        ystore[i+1,2]=(isotopes_sim[0][0]/(3676.5e-6)-1.)*1000.
-        ystore[i+1,3]=mole_elements[1]
+        # calculate the temperature global mean from Forget et al.
+        tglobal = mars_temp_forget.meanTvP1(Patm)
+
+        ystore[i+1,0]=Patm										# Patm
+        ystore[i+1,1]=(isotopes_sim[0][0]/(3676.5e-6)-1.)*1000.	# d15N
+        ystore[i+1,2]=isotopes_sim[1][0]						# 22Ne/20Ne
+        ystore[i+1,3]=isotopes_sim[2][0]						# 38Ar/36Ar
+        ystore[i+1,4]=isotopes_sim[3][4]						# 86Kr/84Kr
+        ystore[i+1,5]=isotopes_sim[4][7]						# 136Xe/130Xe
+        ystore[i+1,6]=tglobal									# tglobal
         
         if ((t[i]-last_output)>=output_interval):
-        	# calculate the temperature global mean from Forget et al.
-        	tglobal = mars_temp_forget.meanTvP1(Patm)
         	print('time: ' + str(t[i]/1e9) + '; num impacts 1: ' + str(num_impactor1) + \
                 '; num impacts 20: ' + str(num_impactor20) + '; ratio: ' + \
                  str(num_impactor1/num_impactor20) + '; Patm: ' + str(Patm) + \
@@ -455,7 +462,14 @@ if __name__ == "__main__":
     """
     
     if(len(sys.argv)>1):
-    	np.savez(file1,t=t,Patm=ystore[:,1],dN=ystore[:,2],mole1=ystore[:,3])
+    	np.savez(file1,t=t,Patm=ystore[:,0], \
+    		isoRat=ystore[:,1:],\
+    		element_mass=isotopic_data.element_mass, \
+    		abundances_wrt_sol=mole_elements/isotopic_data.solar_abundances, \
+    		isotopes=[isotopic_data.isotopes[0],isotopic_data.isotopes[2],\
+    			isotopic_data.isotopes[7], \
+    				isotopic_data.isotopes[15]], \
+    				temp=ystore[:,6] )
     	print(file1)
     
 

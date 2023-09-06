@@ -78,18 +78,32 @@ if __name__ == "__main__":
 	"""
 	temp=np.load(strOutputFiles[0] + '.npz')
 	t = temp['t']
-	Patms 	= np.zeros((len(t),len(strOutputFiles)))
-	dNs 	= np.copy(Patms)
-	mole1s 	= np.copy(Patms)
+	isoRat = temp['isoRat']
+	(tlen,isolen)=np.shape(isoRat)
+	element_mass=temp['element_mass']
+	isotopes=temp['isotopes']
+	(elen)=len(element_mass)
+	(ilen)=len(isotopes)
+	
+	Patms 			= np.zeros((tlen,len(strOutputFiles)))
+	temperatures 	= np.zeros((tlen,len(strOutputFiles)))
+	isoRats 		= np.zeros((tlen,isolen,len(strOutputFiles)))
+	element_masses 	= np.zeros((elen,len(strOutputFiles)))
+	abundances_wrt_sols 	= np.zeros((elen,len(strOutputFiles)))
+	#isotopess 		= np.array((ilen,len(strOutputFiles)))
 	for i in range(len(strOutputFiles)):
 		temp = np.load(strOutputFiles[i] + '.npz')
-		Patms[:,i]	=temp['Patm']
-		dNs[:,i]	=temp['dN']
-		mole1s[:,i]	=temp['mole1']
+		Patms[:,i]			=temp['Patm']
+		isoRats[:,:,i]		=temp['isoRat']
+		element_masses[:,i]	=temp['element_mass']
+		abundances_wrt_sols[:,i]	=temp['abundances_wrt_sol']
+		isotopess		=temp['isotopes']
+		temperatures[:,i]	=temp['temp']
 	"""
 		now save it
 	"""
-	np.savez(outputFileName,t=t,Patm=Patms,dN=dNs,mole1=mole1s)
+	np.savez(outputFileName,t=t,Patm=Patms,isoRat=isoRats,element_mass=element_masses, \
+		abundances_wrt_sol=abundances_wrt_sols, isotopes=isotopess,temp=temperatures)
 	
 	
 	

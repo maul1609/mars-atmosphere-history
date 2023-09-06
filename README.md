@@ -77,12 +77,12 @@ For a simulation that collapses the ratio of $\frac{^{20}Ne}{^{22}Ne}$ is output
 	1./isotopes_sim[1][0]
 which is around 10.5
 
-$\frac{^{38}Ar}{^{36}Ar}$ is the 3rd entry in the isotope ratio list, and there is only one entry for Ar, the first one:
+$Ar$ is the 3rd entry in the isotope ratio list, and there is only one entry for Ar, the first one is $\frac{^{38}Ar}{^{36}Ar}$ :
 
 	isotopes_sim[2][0]
 which is around 0.23
 
-$\frac{^{86}Kr}{^{84}Kr}$ is the 4th entry in the isotope ratio list, and there are 5 entries for Kr. $\frac{^{86}Kr}{^{84}Kr}$ is the 5th entry:
+$Kr$ is the 4th entry in the isotope ratio list, and there are 5 entries for Kr. $\frac{^{86}Kr}{^{84}Kr}$ is the 5th entry:
 
 	isotopes_sim[3][4]
 which is around 0.3
