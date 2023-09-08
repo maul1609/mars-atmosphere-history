@@ -463,7 +463,7 @@ if __name__ == "__main__":
     
     if(len(sys.argv)>1):
     	np.savez(file1,t=t,Patm=ystore[:,0], \
-    		isoRat=ystore[:,1:],\
+    		isoRat=ystore[:,1:6],\
     		element_mass=isotopic_data.element_mass, \
     		abundances_wrt_sol=mole_elements/isotopic_data.solar_abundances, \
     		isotopes=[isotopic_data.isotopes[0],isotopic_data.isotopes[2],\
