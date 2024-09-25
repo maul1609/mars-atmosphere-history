@@ -27,7 +27,7 @@ def test(y,t,omega):
 
 
 # if __name__ == "__main__":
-def run_model(runNo, return_dict):
+def run_model(runNo):
     """
         initial conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
@@ -478,6 +478,6 @@ def run_model(runNo, return_dict):
     				temp=ystore[:,6] )
     	print(file1)
     	
-    return_dict[runNo]=(t,ystore,mole_elements,isotopes_sim)
+    return t,ystore,mole_elements,isotopes_sim
     	
 
