@@ -18,7 +18,7 @@ After running in ipython you can plot the pressure by typing:
     import matplotlib.pyplot as plt
     plt.ion()
     plt.figure()
-    plt.plot(t, ystore[:,1])
+    plt.plot(t, ystore[:,0])
     plt.yscale('log')
     plt.ylabel('Pressure (bar)')
     plt.xlabel('Time (years)')
@@ -41,7 +41,7 @@ The shape of the elemental abundances can be shown as follows:
 For the abundance of nitrogen-15 in per mil, this is saved, so can be plotted as follows
 
     plt.figure()
-    plt.plot(t, ystore[:,2])
+    plt.plot(t, ystore[:,1])
     plt.ylabel(u'$\delta ^{15}$N [‰]')
     plt.xlabel('Time (years)')
     plt.title('Pressure over time')

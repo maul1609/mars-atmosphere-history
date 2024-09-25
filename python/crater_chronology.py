@@ -4,17 +4,18 @@ import numpy as np
 def N1(t):
     # see figure 1, Morbidelli et al. 2012
     # input time ago (i.e. should be positive)
-    return 5.44e-14*(np.exp(6.93*t)-1.)+8.38e-4*t
+    return (5.44e-14*(np.exp(6.93*t)-1.)+8.38e-4*t)*1e6
     
 def dN1_dt(t):
     # see figure 1, Morbidelli et al. 2012
     # input time ago (i.e. should be positive)
-    return 3.76992e-13*np.exp(6.93*t)+8.38e-4
+    return (3.76992e-13*np.exp(6.93*t)+8.38e-4)*1e6
     
 def dN20_dt1(t):
     # see figure 3, Morbidelli et al. 2012
     # input time ago (i.e. should be positive)
     N=5.9e-7+2.7e-16*np.exp(6.93*t)  
+    N=N*1e6
 
     return N
 
@@ -22,6 +23,7 @@ def dN20_dt2(t):
     # see figure 3, Morbidelli et al. 2012
     # input time ago (i.e. should be positive)
     N=2.5e-2*np.exp(-((4.5-t)/0.003)**0.34)  
+    N=N*1e6
 
     return N
 
@@ -29,7 +31,7 @@ def dN20_dt3(t):
     # see figure 3, Morbidelli et al. 2012
     # input time ago (i.e. should be positive)
     N=2.0e-2*np.exp(-((4.5-t)/0.01)**0.5)  
-
+    N=N*1e6
     return N
 
 def dN20_dt_integrand(t,model=1):
@@ -88,4 +90,20 @@ if __name__ == "__main__":
     # test overall
     result = quad(dN20_dt_integrand,0,t,2)
     print('Overall: ' + str(Amars*result[0]))
+    
+    t=np.linspace(4.49,0,1000)
+    dN201 = [dN20_dt_integrand(tt,1) for tt in t]
+    dN202 = [dN20_dt_integrand(tt,2) for tt in t]
+    dN203 = [dN20_dt_integrand(tt,3) for tt in t]
+    dN1 = [dN1_dt(tt) for tt in t]
+    plt.plot(-t,dN201)
+    plt.plot(-t,dN202)
+    plt.plot(-t,dN203)
+    plt.plot(-t,dN1)
+    
+    plt.yscale('log')
+    plt.xlabel('time (Gyr)')
+    plt.ylabel(r'$\frac{dN}{dt}$ (m$^{-2}$ Gyr$^{-1}$)')
+    plt.legend(['Neukum & Ivanov (1994)','sawtooth 1','sawtooth 2',\
+    	'Small < 1km craters'])
     

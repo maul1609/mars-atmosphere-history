@@ -38,5 +38,8 @@ if __name__ == "__main__":
 	plt.ion()
 	plt.plot(P,meanTvP1(P))
 	plt.plot(P,meanTvP2(P))
+	plt.xlabel('Mars surface pressure (bar)')
+	plt.ylabel('Global mean surface temperature (K)')
+	plt.legend(['Active clouds','Inactive clouds'])
 	plt.show()
 	

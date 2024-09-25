@@ -102,30 +102,36 @@ if __name__=="__main__":
     
     
     plt.ion() 
-    plt.figure()
+    fig=plt.figure(figsize=(14,5))
+    plt.subplot(131)
     plt.plot(xi,Xa)
     plt.xscale('log')  
     plt.yscale('log')  
     plt.show()
-    plt.ylabel('Xa')
+    plt.ylabel(r'$X_a$')
     plt.xlabel(r'$\xi$')
+    plt.title('(a) Normalised mass lost')
 
-    plt.figure()
+    plt.subplot(132)
     plt.plot(xi,fractional_change_in_mass)
     plt.xscale('log')  
     plt.yscale('log')  
     plt.show()
     plt.ylabel(r'$\frac{\Delta m}{m}$')
     plt.xlabel(r'$\xi$')
+    plt.title('(b) Fractional change in mass')
     
     
     # figure 4 b
     Xpr = normalised_projectile_mass(rho_t, rho_pr, v, uesc, xi)
-    plt.figure()
+    plt.subplot(133)
     plt.plot(xi,Xpr)
     plt.xscale('log')  
     plt.ylabel('$X_{pr}$')
     plt.xlabel(r'$\xi$')
+    plt.title('(c) Normalised projectile mass')
+    
+    fig.tight_layout()
     
     
     

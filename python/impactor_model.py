@@ -123,7 +123,8 @@ if __name__ == "__main__":
 
     plt.ion()
     plt.show()
-
+    
+    fig=plt.figure()
     # plot the PSD - Probability Size Distribution / PDF - area under curve is 1.
     ax1=plt.subplot(211)
     plt.plot(D,imp)
@@ -132,13 +133,15 @@ if __name__ == "__main__":
     x=plt.xlim()
     y=plt.ylim()
     plt.ylabel('PDF from dmin - 10$^6$')
-
+    ax1.text(0.1,0.2,'(a) histogram',transform=ax1.transAxes)
 
     # plot the CSD - cumulative Size Distribution / CDF - varies between 0 and 1
     ax2=plt.subplot(212)
     plt.plot(D,Prob)
     plt.xscale('log')
     plt.ylabel('Cumulative Frequency')
+    plt.xlabel('D (m)')
+    ax2.text(0.5,0.2,'(b) cumulative histogram',transform=ax2.transAxes)
 
 
     """
@@ -161,4 +164,4 @@ if __name__ == "__main__":
     plt.xlabel('D (m)')
     plt.ylabel('Histogram - normalized')
     plt.legend(['PDF','Sampled using Monte-Carlo'])
-
+    fig.tight_layout()
