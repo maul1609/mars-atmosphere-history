@@ -8,7 +8,7 @@ num_cores=10
 nc=min([num_runs,num_cores])
 
 if __name__== "__main__":
-# 	manager = multiprocessing.Manager()
+	manager = multiprocessing.Manager()
 	return_dict = manager.dict()
 # 	jobs = []
 # 	for i in range(num_runs):
