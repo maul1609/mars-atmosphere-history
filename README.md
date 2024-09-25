@@ -44,7 +44,7 @@ For the abundance of nitrogen-15 in per mil, this is saved, so can be plotted as
     plt.plot(t, ystore[:,1])
     plt.ylabel(u'$\delta ^{15}$N [‰]')
     plt.xlabel('Time (years)')
-    plt.title('Pressure over time')
+    plt.title('Nitrogen-15 abundance')
     plt.grid()
 	
 ![](images/nitrogen.png)

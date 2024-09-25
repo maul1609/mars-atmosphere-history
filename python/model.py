@@ -26,8 +26,7 @@ def test(y,t,omega):
 
 
 
-# if __name__ == "__main__":
-def run_model(runNo, return_dict):
+if __name__ == "__main__":
     """
         initial conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
@@ -56,7 +55,6 @@ def run_model(runNo, return_dict):
     rho_pr=2600. # density of impactor
     Pcollapse = mars_temp_forget.meanPvObliquity(Obliquity)
     sampleFlag = 0 # 0=once, 1=every time-step; 
-    printOutput = False
     
     total_impactor_mass = 2.e21 # kg
     tfinal=0.
@@ -170,7 +168,6 @@ def run_model(runNo, return_dict):
     ystore[0,4]=isotopes_sim[3][4]							# 86Kr/84Kr
     ystore[0,5]=isotopes_sim[4][7]							# 136Xe/130Xe
     ystore[0,6]=mars_temp_forget.meanTvP1(Patm)				# tglobal
-    ystore[0,7]=Hscale										# Hscale
     
     # sample the sizes of the impactors
     diams, mass = impactor_model.sample_sizes(rand_numbers, rho_pr)
@@ -185,9 +182,9 @@ def run_model(runNo, return_dict):
     """
         ----------------------------------------------------------------------------------
     """
-    if printOutput:
-    	print(total_impactor_mass/np.sum(mass))
-    	print('Note, the pressure for atmospheric collapse is ' + str(Pcollapse))
+
+    print(total_impactor_mass/np.sum(mass))
+    print('Note, the pressure for atmospheric collapse is ' + str(Pcollapse))
     #nsteps=0
 
     """
@@ -450,18 +447,16 @@ def run_model(runNo, return_dict):
         ystore[i+1,4]=isotopes_sim[3][4]						# 86Kr/84Kr
         ystore[i+1,5]=isotopes_sim[4][7]						# 136Xe/130Xe
         ystore[i+1,6]=tglobal									# tglobal
-        ystore[i+1,7]=Hscale									# Hscale
         
         if ((t[i]-last_output)>=output_interval):
-        	if printOutput:
-        		print('time: ' + str(t[i]/1e9) + '; num impacts 1: ' + str(num_impactor1) + \
-					'; num impacts 20: ' + str(num_impactor20) + '; ratio: ' + \
-					 str(num_impactor1/num_impactor20) + '; Patm: ' + str(Patm) + \
-					 '; d15N: ' + str(ystore[i+1,2]) + '; euv: ' + str(euv_flux) + \
-					 '; tg: ' + str(tglobal) )
+        	print('time: ' + str(t[i]/1e9) + '; num impacts 1: ' + str(num_impactor1) + \
+                '; num impacts 20: ' + str(num_impactor20) + '; ratio: ' + \
+                 str(num_impactor1/num_impactor20) + '; Patm: ' + str(Patm) + \
+                 '; d15N: ' + str(ystore[i+1,2]) + '; euv: ' + str(euv_flux) + \
+                 '; tg: ' + str(tglobal) )
         	last_output = t[i]
-        if printOutput:
-        	print('Final time: ' + str(t[-1]/1e9))
+
+    print('Final time: ' + str(t[-1]/1e9))
     """
         ----------------------------------------------------------------------------------
     """
@@ -476,7 +471,7 @@ def run_model(runNo, return_dict):
     				isotopic_data.isotopes[15]], \
     				temp=ystore[:,6] )
     	print(file1)
-    	
-    return_dict[runNo]=(t,ystore,mole_elements,isotopes_sim)
-    	
+    
+
+
 
