@@ -153,8 +153,9 @@ def run_model(runNo, return_dict):
     (euv_max, f_co2_flux_max) = sputtering_co2.sputtering_co2_rate((t[0]-tinit)/1e9)
     nsteps = len(t)
     n_ode=10
-    rand_numbers=np.random.rand((100000))
-    rand_numbers2=np.random.rand((100000))
+    rng=np.random.RandomState(runNo)
+    rand_numbers=rng.rand((100000))
+    rand_numbers2=rng.rand((100000))
     """
         ----------------------------------------------------------------------------------
     """
@@ -195,8 +196,8 @@ def run_model(runNo, return_dict):
     """
     for i in range(nsteps-1):
         if sampleFlag == 1:
-            rand_numbers=np.random.rand((100000))
-            rand_numbers2=np.random.rand((100000))
+            rand_numbers=rng.rand((100000))
+            rand_numbers2=rng.rand((100000))
             # sample the sizes of the impactors
             diams, mass = impactor_model.sample_sizes(rand_numbers, rho_pr)
             # sample the impact velocities - not sure if this should be a different random number
