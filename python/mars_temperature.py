@@ -31,11 +31,14 @@ Fs=F0-Labs-Fc
 Ts=(Fs/(0.95*stefan))**0.25
 
 def co2_vap_press(t):
-	Rv = 8.314/44e-3
-	Ls = 32.3e3/44e-3
-	t0=216.8  # k
-	p0=5.13e5 # pa
-	co2_vp = p0*np.exp(Ls/Rv*(1./t0-1./t))
+# 	Rv = 8.314/44e-3
+# 	Ls = 32.3e3/44e-3
+# 	t0=216.8  # k
+# 	p0=5.13e5 # pa
+# 	co2_vp = p0*np.exp(Ls/Rv*(1./t0-1./t))
+	
+	co2_vp = np.exp(np.log(760/101.325)-24.03761*np.log(t) - \
+		7062.404/(t)+166.3861+3.368548e-5*(t)**2)*133.322
 	return co2_vp
 	
 if __name__ == "__main__":

@@ -14,10 +14,27 @@ data['inactive_clouds'] = np.array([[0.088328076,0.287066246,0.507886435,0.99369
 	1.976340694,2.914826498,3.798107256,4.648264984,6.348580442], \
     [199.0677966,204.9152542,209.5762712,215.4237288,219.9152542,219.8305085, \
     218.3050847,219.5762712,226.6949153]])
+
+
+# 0
+data['bradley_wrf_0'] = np.array([[0.006,0.5,1.0], \
+    [273.15-110,273.15-65,273.15-50.]])
+# 45
+data['bradley_wrf_45'] = np.array([[0.006,0.5,1.0], \
+    [273.15-125,273.15-85,273.15-60.]])   
+# 90
+data['bradley_wrf_90'] = np.array([[0.006,0.5,1.0], \
+    [273.15-125,273.15-85,273.15-63.]])
     
 
 meanTvP1=scint.interp1d(data['active_clouds'][0],data['active_clouds'][1],fill_value='extrapolate',kind='linear')
 meanTvP2=scint.interp1d(data['inactive_clouds'][0],data['inactive_clouds'][1],fill_value='extrapolate',kind='linear')
+
+minTvP_bradley_0=scint.interp1d(data['bradley_wrf_0'][0],data['bradley_wrf_0'][1],fill_value='extrapolate',kind='linear')
+
+minTvP_bradley_45=scint.interp1d(data['bradley_wrf_45'][0],data['bradley_wrf_45'][1],fill_value='extrapolate',kind='linear')
+
+minTvP_bradley_90=scint.interp1d(data['bradley_wrf_90'][0],data['bradley_wrf_90'][1],fill_value='extrapolate',kind='linear')
 
 # figure 14, boundary for collapse (pressure vs obliquity)
 data['collapse1'] = np.array([[0.08,0.091865426,0.110467595,0.150790727,0.183426726,\

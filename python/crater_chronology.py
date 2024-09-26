@@ -22,7 +22,8 @@ def dN20_dt1(t):
 def dN20_dt2(t):
     # see figure 3, Morbidelli et al. 2012
     # input time ago (i.e. should be positive)
-    N=2.5e-2*np.exp(-((4.5-t)/0.003)**0.34)  
+    N=np.minimum(2.5e-2*np.exp(-((4.5-t)/0.003)**0.34), \
+    	5.9e-7+2.7e-16*np.exp(6.93*4.5))
     N=N*1e6
 
     return N
@@ -30,7 +31,8 @@ def dN20_dt2(t):
 def dN20_dt3(t):
     # see figure 3, Morbidelli et al. 2012
     # input time ago (i.e. should be positive)
-    N=2.0e-2*np.exp(-((4.5-t)/0.01)**0.5)  
+    N=np.minimum(2.0e-2*np.exp(-((4.5-t)/0.01)**0.5)  , \
+    	5.9e-7+2.7e-16*np.exp(6.93*4.5))
     N=N*1e6
     return N
 
@@ -75,8 +77,8 @@ if __name__ == "__main__":
     print('Model1: ' + str(Amars*result[0]))
     
     # model 2 - dN20_dt1 up to 4.1 and dN20_dt2 after - red line  
-    result = quad(dN20_dt1,0,4.1)
-    result2 = quad(dN20_dt2,4.1,t)
+    result = quad(dN20_dt1,0,4.1, epsrel = 1e-012)
+    result2 = quad(dN20_dt2,4.1,t, epsrel = 1e-012)
     
     print('Model2: ' + str(Amars*(result[0]+result2[0])))    
     
@@ -88,10 +90,10 @@ if __name__ == "__main__":
     
     
     # test overall
-    result = quad(dN20_dt_integrand,0,t,2)
+    result = quad(dN20_dt_integrand,0,t,2, epsrel = 1e-012)
     print('Overall: ' + str(Amars*result[0]))
     
-    t=np.linspace(4.49,0,1000)
+    t=np.linspace(4.5,0,1000)
     dN201 = [dN20_dt_integrand(tt,1) for tt in t]
     dN202 = [dN20_dt_integrand(tt,2) for tt in t]
     dN203 = [dN20_dt_integrand(tt,3) for tt in t]

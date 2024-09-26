@@ -1,9 +1,10 @@
 import multiprocessing
 import time
 import main
+import matplotlib.pyplot as plt
 
-num_runs=5
-num_cores=5
+num_runs=20
+num_cores=10
 
 nc=min([num_runs,num_cores])
 
@@ -24,3 +25,14 @@ if __name__== "__main__":
     output = [p.get() for p in results]
     pool.close()
     pool.join()
+    
+    plt.ion()
+    plt.subplot(211)
+    for i in range(len(output)):
+    	(t,ystore,mole_elements,isotopes_sim,Amars)=output[i]
+    	plt.plot(t, ystore[:,0])
+    	plt.yscale('log')
+    plt.subplot(212)
+    for i in range(len(output)):
+    	(t,ystore,mole_elements,isotopes_sim,Amars)=output[i]
+    	plt.plot(t, ystore[:,1])

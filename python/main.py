@@ -15,6 +15,7 @@ import isotopic_data
 import photo_chemical
 import IDPs
 import mars_temp_forget
+import mars_temperature
 
 """
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.odeint.html
@@ -50,6 +51,7 @@ def run_model(runNo):
     f_comet = 0.001
     C_vol = 5.
     C_Ne_IDP = 10.
+    crater_model=1
     
     Obliquity=20. # the obliquity of mars
     
@@ -152,7 +154,7 @@ def run_model(runNo):
 
     (euv_max, f_co2_flux_max) = sputtering_co2.sputtering_co2_rate((t[0]-tinit)/1e9)
     nsteps = len(t)
-    n_ode=10
+    n_ode=11
     rng=np.random.RandomState(runNo)
     rand_numbers=rng.rand((100000))
     rand_numbers2=rng.rand((100000))
@@ -172,6 +174,9 @@ def run_model(runNo):
     ystore[0,5]=isotopes_sim[4][7]							# 136Xe/130Xe
     ystore[0,6]=mars_temp_forget.meanTvP1(Patm)				# tglobal
     ystore[0,7]=Hscale										# Hscale
+    ystore[0,8]=Matm[0]										# co2
+    ystore[0,9]=Matm[1]										# n2
+    ystore[0,10]=Matm[2]										# h2o
     
     # sample the sizes of the impactors
     diams, mass = impactor_model.sample_sizes(rand_numbers, rho_pr)
@@ -179,6 +184,7 @@ def run_model(runNo):
     vels = impactor_velocity.inv_cdf1(rand_numbers2)
     # total number of impacts over the whole history
     num_impactor1_tot=crater_chronology.N1_between(Amars,0.,4.5)
+    num_impactor20_tot=crater_chronology.N20_between(Amars,0.,4.5,model=crater_model)
     
     # escape velocity
     uesc=impactor_atmos_loss_gain_eq4_5.escape_velocity(Ggrav,Mmars,Rmars)
@@ -211,11 +217,12 @@ def run_model(runNo):
         
         # 3. impacts of asteroids and comets. during this time-step
         num_impactor1=crater_chronology.N1_between(Amars,-t[i+1]/1e9,-t[i]/1e9)
-        num_impactor20=crater_chronology.N20_between(Amars,-t[i+1]/1e9,-t[i]/1e9,model=1)
+        num_impactor20=crater_chronology.N20_between(Amars,-t[i+1]/1e9,-t[i]/1e9,model=crater_model)
         
 
         # note that results at each time get scaled by:
-        scaling = total_impactor_mass / np.sum(mass) * num_impactor1 / num_impactor1_tot
+#         scaling = total_impactor_mass / np.sum(mass) * num_impactor1 / num_impactor1_tot
+        scaling = total_impactor_mass / np.sum(mass) * num_impactor20 / num_impactor20_tot
         
         
         
@@ -390,9 +397,9 @@ def run_model(runNo):
         
         # 6. Volcanic degassing - digitise rates and incorporate total
         Matm = Natm * MolW_atm
-        h2o=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'h2o') * C_vol
-        co2=volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'co2') * C_vol
-        n2 =volcano_outgassing.get_outgas_rate(t[i+1]/1e9,'n2')  * C_vol
+        h2o=volcano_outgassing.get_outgas_rate(t[i]/1e9,'h2o') * C_vol
+        co2=volcano_outgassing.get_outgas_rate(t[i]/1e9,'co2') * C_vol
+        n2 =volcano_outgassing.get_outgas_rate(t[i]/1e9,'n2')  * C_vol
         Matm = Matm + np.array([co2,n2,h2o])*MolW_atm*tstep*86400*365/6.02e23
         Matm[2] = np.minimum(Matm[2]*grav_mars/Amars,ph2o)*Amars/grav_mars
         Natm = Matm / MolW_atm
@@ -414,9 +421,11 @@ def run_model(runNo):
         # same for water vapour really, perhaps having a reservoir
 		# readjust Matm: thirdly it cant go below the threshold where it collapses due to
 		# radiative effect forget et al:
-        if(Patm < Pcollapse):
-            Patm = 6.e-3
-            Matm[0] = Patm*1e5*Amars / grav_mars # mass of atmosphere
+        Pcollapse=mars_temperature.co2_vap_press( \
+            mars_temp_forget.minTvP_bradley_0(Patm))/1e5
+        if(Patm > Pcollapse):
+#             Patm = 6.e-3
+            Matm[0] = Pcollapse*1e5*Amars / grav_mars # mass of CO2
             Patm = np.sum(Matm)*grav_mars/(Amars)/1e5
             #Matm[1:] = 0. # if it's collapsed, just assume it is CO2
             mole_elements[0] = Matm[0] / MolW_atm[0]
@@ -452,6 +461,9 @@ def run_model(runNo):
         ystore[i+1,5]=isotopes_sim[4][7]						# 136Xe/130Xe
         ystore[i+1,6]=tglobal									# tglobal
         ystore[i+1,7]=Hscale									# Hscale
+        ystore[i+1,8]=Matm[0]	# co2
+        ystore[i+1,9]=Matm[1]	# n2
+        ystore[i+1,10]=Matm[2]  # h2o
         
         if ((t[i]-last_output)>=output_interval):
         	if printOutput:
@@ -478,6 +490,6 @@ def run_model(runNo):
     				temp=ystore[:,6] )
     	print(file1)
     	
-    return t,ystore,mole_elements,isotopes_sim
+    return t,ystore,mole_elements,isotopes_sim, Amars
     	
 
