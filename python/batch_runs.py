@@ -20,12 +20,15 @@ if __name__== "__main__":
 # 	for proc in jobs:
 # 		proc.join()
 # 		
+    obliquity=1 # 1==0 deg; 2==45 deg; 3==90 deg
     pool = multiprocessing.Pool(processes=num_cores)
-    results=[pool.apply_async(main.run_model, args=([i])) for i in range(num_runs)]
+    results=[pool.apply_async(main.run_model, args=([i],obliquity)) for i in range(num_runs)]
     output = [p.get() for p in results]
     pool.close()
     pool.join()
     
+
+    plt.figure()
     plt.ion()
     plt.subplot(211)
     for i in range(len(output)):

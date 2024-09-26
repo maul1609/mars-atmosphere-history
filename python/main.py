@@ -28,7 +28,7 @@ def test(y,t,omega):
 
 
 # if __name__ == "__main__":
-def run_model(runNo):
+def run_model(runNo, obliquity_flag):
     """
         initial conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
@@ -421,8 +421,15 @@ def run_model(runNo):
         # same for water vapour really, perhaps having a reservoir
 		# readjust Matm: thirdly it cant go below the threshold where it collapses due to
 		# radiative effect forget et al:
-        Pcollapse=mars_temperature.co2_vap_press( \
-            mars_temp_forget.minTvP_bradley_0(Patm))/1e5
+        if obliquity_flag==1:
+            Pcollapse=mars_temperature.co2_vap_press( \
+               mars_temp_forget.minTvP_bradley_0(Patm))/1e5
+        elif obliquity_flag==2:
+            Pcollapse=mars_temperature.co2_vap_press( \
+               mars_temp_forget.minTvP_bradley_45(Patm))/1e5
+        elif obliquity_flag==3:
+            Pcollapse=mars_temperature.co2_vap_press( \
+		       mars_temp_forget.minTvP_bradley_90(Patm))/1e5
         if(Patm > Pcollapse):
 #             Patm = 6.e-3
             Matm[0] = Pcollapse*1e5*Amars / grav_mars # mass of CO2
