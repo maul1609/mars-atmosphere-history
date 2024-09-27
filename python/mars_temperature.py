@@ -47,5 +47,19 @@ if __name__ == "__main__":
 	plt.ion()
 	
 	t = np.linspace(120,300,1000)
-	plt.plot(t,co2_vap_press(t)/1e5)
+	plt.plot(t-273.15,co2_vap_press(t)/1e5)
+	x1=-125
+	x2=-70
+	logy1=np.log10(0.006)
+	logy2=np.log10(5)
+	m=(logy2-logy1)/(x2-x1)
+	c=logy2-m*x2
+	
+	plt.plot(t-273.15,10**(m*(t-273.15)+c),'--b')
+	plt.xlabel('T ($^\circ$C)')
+	plt.ylabel('$P_{CO_2}$ (atm)')
+	plt.yscale('log')
+	plt.ylim((1e-5,1e1))
+	plt.xlim((-160,-50))
+	plt.grid()
 	plt.show()

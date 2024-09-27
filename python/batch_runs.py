@@ -3,26 +3,15 @@ import time
 import main
 import matplotlib.pyplot as plt
 
-num_runs=100
-num_cores=100
+num_runs=10
+num_cores=10
 
 nc=min([num_runs,num_cores])
 
 if __name__== "__main__":
-#    manager = multiprocessing.Manager()
-#    return_dict = manager.dict()
-# 	jobs = []
-# 	for i in range(num_runs):
-# 		p = multiprocessing.Process(target=main.run_model, args=(i, return_dict))
-# 		jobs.append(p)
-# 		p.start()
-# 	
-# 	for proc in jobs:
-# 		proc.join()
-# 		
     obliquity=2 # 1==0 deg; 2==45 deg; 3==90 deg
-    sputtering=False
-    photochemical_escape=False 
+    sputtering=True
+    photochemical_escape=True 
     pool = multiprocessing.Pool(processes=num_cores)
     results=[pool.apply_async(main.run_model, \
        args=([i],obliquity), \
@@ -62,3 +51,26 @@ if __name__== "__main__":
     plt.text(0.5,0.2,'(b)',transform=ax2.transAxes)
 
     fig.tight_layout()
+    
+    # mole_elements
+    fig=plt.figure()
+    for i in range(len(output)):
+        (t,ystore,mole_elements,isotopes_sim,Amars)=output[i]
+        if (ystore[-1,0] < 0.1):
+            COUNT=COUNT+1
+            plt.plot(main.isotopic_data.element_mass,  \
+				mole_elements/main.isotopic_data.solar_abundances/1e16,'-s',lw=1)
+        else:            
+            plt.plot(main.isotopic_data.element_mass,  \
+				mole_elements/main.isotopic_data.solar_abundances/1e16,'-s',lw=0.1)
+			
+    plt.plot(main.isotopic_data.element_mass,  \
+		main.isotopic_data.abundances1['Obs'][1],'r-s',linewidth=3)
+
+    plt.yscale('log')
+    plt.grid()
+    plt.ylabel('Abundances wrt solar values')
+    plt.xlabel('Mass number')
+
+    
+

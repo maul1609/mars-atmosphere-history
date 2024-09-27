@@ -27,6 +27,16 @@ abundances1['Mars'] = np.array([volx,voly])
 voly = np.array([0.000175539, 8.1881E-06, 4.14E-11,3.88E-11,7.49E-09,1.56E-08])
 abundances1['Volcanic degassing'] = np.array([volx,voly])
 
+# digitised data from obs (figure 6 kurokawa)
+voly = np.array([0.000002820281104255998, \
+			4.579506855064379e-7, \
+			2.820281104255998e-11,\
+			3.359818286283788e-9,\
+			3.0575961084169417e-7,\
+			2.6723945955333497e-7])
+			
+abundances1['Obs'] = np.array([volx,voly])
+
 atom_wgts=volx/1000.
 
 
