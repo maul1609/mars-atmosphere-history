@@ -28,7 +28,8 @@ def test(y,t,omega):
 
 
 # if __name__ == "__main__":
-def run_model(runNo, obliquity_flag):
+def run_model(runNo, obliquity_flag, sputtering_flag=True, pce_flag=True,\
+        X_gas=0.01,f_comet=0.001, C_vol=5.0, crater_model=1,C_Ne_IDP = 10.):
     """
         initial conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
@@ -47,11 +48,6 @@ def run_model(runNo, obliquity_flag):
     Rgas = 8.314 # ideal gas constant
     #MolW_atm = 44.01e-3 # molecular weight of martian atmosphere - may change???
     MolW_atm = np.array([44.01e-3, 28.0134e-3, 18.01528e-3])
-    X_gas = 0.01
-    f_comet = 0.001
-    C_vol = 5.
-    C_Ne_IDP = 10.
-    crater_model=1
     
     Obliquity=20. # the obliquity of mars
     
@@ -341,7 +337,7 @@ def run_model(runNo, obliquity_flag):
         F_i_sp1=MarsSputtering_Calc6_7.F_i_sp(f_co2_flux, \
             mole_elements,Natm[0],['C','N','Ne','Ar','Kr','Xe'])
         # CO2 and N2 - only after 4.1 Gyr
-        if(-t[i]/1e9<4.1):
+        if((-t[i]/1e9<4.1) and sputtering_flag):
             Natm[0] = Natm[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
             Natm[1] = Natm[1] - 0.5*F_i_sp1[1] * tstep *86400*365/6.02e23
             #Natm = np.maximum(Natm,0.)
@@ -365,15 +361,19 @@ def run_model(runNo, obliquity_flag):
         
         # 5b photochemical escape
         # carbon - rate of escape
-        Fcph = photo_chemical.carbon_escape((t[i]-tinit)/1e9,\
-            (t[i+1]-tinit)/1e9,(-tinit)/1e9) / 6.02e23
-        # nitrogen - rate of escape
-        (fn2_1,fn2_2,fn2_3)=photo_chemical.nitrogen_escape(\
-            np.maximum(Natm[0],1e-3),Natm[1],np.minimum(euv_flux,6),1.,Amars, Hscale)
-        # total loss rate
-        fn2 = (fn2_1+fn2_2+fn2_3)*Natm[1]/Ninit
-        dN2 =[fn2*tstep*86400*365/6.02e23 ,0., 0.,0.,0.]
-#         dN2[0]=0.
+        if pce_flag:
+                Fcph = photo_chemical.carbon_escape((t[i]-tinit)/1e9,\
+                    (t[i+1]-tinit)/1e9,(-tinit)/1e9) / 6.02e23
+                # nitrogen - rate of escape
+                (fn2_1,fn2_2,fn2_3)=photo_chemical.nitrogen_escape(\
+                    np.maximum(Natm[0],1e-3),Natm[1],np.minimum(euv_flux,6),1.,Amars, Hscale)
+                # total loss rate
+                fn2 = (fn2_1+fn2_2+fn2_3)*Natm[1]/Ninit
+                dN2 =[fn2*tstep*86400*365/6.02e23 ,0., 0.,0.,0.]
+        else:
+                Fcph=0.
+                dN2[0]=0.
+
         Natm[0] = Natm[0] - Fcph*tstep*86400*365/6.02e23
         Natm[1] = Natm[1] - dN2[0]
         mole_elements[0] = mole_elements[0] - Fcph*tstep*86400*365/6.02e23

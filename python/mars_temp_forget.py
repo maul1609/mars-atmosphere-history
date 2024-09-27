@@ -24,7 +24,7 @@ data['bradley_wrf_45'] = np.array([[0.006,0.5,1.0], \
     [273.15-125,273.15-85,273.15-60.]])   
 # 90
 data['bradley_wrf_90'] = np.array([[0.006,0.5,1.0], \
-    [273.15-125,273.15-85,273.15-63.]])
+    [273.15-130,273.15-85,273.15-63.]])
     
 
 meanTvP1=scint.interp1d(data['active_clouds'][0],data['active_clouds'][1],fill_value='extrapolate',kind='linear')
