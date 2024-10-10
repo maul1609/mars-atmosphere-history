@@ -369,15 +369,16 @@ def run_model(runNo, obliquity_flag, sputtering_flag=True, pce_flag=True,\
                     np.maximum(Natm[0],1e-3),Natm[1],np.minimum(euv_flux,6),1.,Amars, Hscale)
                 # total loss rate
                 fn2 = (fn2_1+fn2_2+fn2_3)*Natm[1]/Ninit
+                # it is N2
                 dN2 =[fn2*tstep*86400*365/6.02e23 ,0., 0.,0.,0.]
         else:
                 Fcph=0.
                 dN2[0]=0.
 
         Natm[0] = Natm[0] - Fcph*tstep*86400*365/6.02e23
-        Natm[1] = Natm[1] - dN2[0]
+        Natm[1] = Natm[1] - dN2[0] # N2
         mole_elements[0] = mole_elements[0] - Fcph*tstep*86400*365/6.02e23
-        mole_elements[1] = mole_elements[1] - dN2[0] * 2
+        mole_elements[1] = mole_elements[1] - dN2[0] * 2 # N
         Matm = Natm * MolW_atm
 
         isotopes_sim = isotopic_data.escape_fr(isotopes_sim, N, dN, dN2, Rdiffs_isotopes)
@@ -430,9 +431,17 @@ def run_model(runNo, obliquity_flag, sputtering_flag=True, pce_flag=True,\
         elif obliquity_flag==3:
             Pcollapse=mars_temperature.co2_vap_press( \
 		       mars_temp_forget.minTvP_bradley_90(Patm))/1e5
-        if(Patm > Pcollapse):
-#             Patm = 6.e-3
+        elif obliquity_flag==-1:
+            Pcollapse=0.5
+            
+        if((Patm > Pcollapse) and (obliquity_flag != -1)):
             Matm[0] = Pcollapse*1e5*Amars / grav_mars # mass of CO2
+            Patm = np.sum(Matm)*grav_mars/(Amars)/1e5
+            #Matm[1:] = 0. # if it's collapsed, just assume it is CO2
+            mole_elements[0] = Matm[0] / MolW_atm[0]
+        if((Patm < Pcollapse) and (obliquity_flag == -1)):
+            Patm = 6.e-3
+            Matm[0] = Patm*1e5*Amars / grav_mars # mass of atmosphere
             Patm = np.sum(Matm)*grav_mars/(Amars)/1e5
             #Matm[1:] = 0. # if it's collapsed, just assume it is CO2
             mole_elements[0] = Matm[0] / MolW_atm[0]
@@ -441,14 +450,14 @@ def run_model(runNo, obliquity_flag, sputtering_flag=True, pce_flag=True,\
         
         Natm = Matm / MolW_atm
         N= mole_elements[1:].copy()
-        dN = [2.*n2*tstep*86400*365/6.02e23]
+        dN = [2.*n2*tstep*86400*365/6.02e23] # this is moles of N
         dN.extend(co2*tstep*86400*365/6.02e23* \
             isotopic_data.abundances1['Volcanic degassing'][1][2:] / \
             isotopic_data.abundances1['Volcanic degassing'][1][0] * \
             isotopic_data.solar_abundances[2:] / isotopic_data.solar_abundances[0])
             
         mole_elements[0] = mole_elements[0] + co2*tstep*86400*365/6.02e23
-        mole_elements[1] = mole_elements[1] + dN[0]
+        mole_elements[1] = mole_elements[1] + dN[0] # moles of N - i.e the element
         mole_elements[2:] = mole_elements[2:] + np.array(dN[1:])
         # 7. Isotope fractionation. need to add elemnents also
         isotopes_sim = isotopic_data.continuous_sources(isotopes_sim, \

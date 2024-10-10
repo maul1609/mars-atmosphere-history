@@ -4,22 +4,26 @@ import main
 import matplotlib.pyplot as plt
 from isotopic_data import errorbars1
 import numpy as np
-num_runs=100
-num_cores=100
+num_runs=10
+num_cores=10
 
 nc=min([num_runs,num_cores])
 
 if __name__== "__main__":
     
     obliquity=2 # 1==0 deg; 2==45 deg; 3==90 deg
-    sputtering=False
-    photochemical_escape=False 
+    sputtering=True
+    photochemical_escape=True 
     textadd=', without Sputtering and PCE'
     pool = multiprocessing.Pool(processes=num_cores)
     results=[pool.apply_async(main.run_model, \
        args=([i],obliquity), \
        kwds={'sputtering_flag': sputtering,\
-       'pce_flag':photochemical_escape}) for i in range(num_runs)]
+       'pce_flag':photochemical_escape, \
+       'C_Ne_IDP': 1., \
+       'f_comet':0.0005, \
+       'X_gas': 0.01, \
+       'crater_model' : 1}) for i in range(num_runs)]
     output = [p.get() for p in results]
     pool.close()
     pool.join()
@@ -46,6 +50,8 @@ if __name__== "__main__":
         plt.title('Obliquity = 45$^\circ$' + textadd)
     elif obliquity == 3:
         plt.title('Obliquity = 90$^\circ$' + textadd)
+    elif obliquity == -1:
+        plt.title('Control' + textadd)
 
     ax2=plt.subplot(612)
     for i in range(len(output)):
