@@ -1,16 +1,16 @@
 # Mars Atmosphere History
 ## Running the code
-To run the model from the command line just type:
-
-`python3 main.py`
-
-Or if you want to run in interactive mode, type
+To run the model in interactive mode, type
 `ipython3`
 to enter ipython3 and from ipython3 you can then run the model by typing:
 
-`run -i main.py `
+`import main `
 
-Note that you only need to type `ipython3` once to enter interactive python, but you may wish to run the model multiple times using `run -i main.py`
+And then by typing
+
+`(t,ystore,mole_elements,isotopes_sim, Amars)=main.run_model(0, obliquity_flag=2) `
+
+Note that you only need to type `ipython3` once to enter interactive python, but you may wish to run the model multiple times using `main.run_model` as above. Please note the first input argument `0` above, can be changed to `1`, `2`, `3` etc, change the initial random seed. 
 
 ## Creating output
 After running in ipython you can plot the pressure by typing:
@@ -20,7 +20,7 @@ After running in ipython you can plot the pressure by typing:
     plt.figure()
     plt.plot(t, ystore[:,0])
     plt.yscale('log')
-    plt.ylabel('Pressure (bar)')
+    plt.ylabel('Pressure (atm)')
     plt.xlabel('Time (years)')
     plt.title('Pressure over time')
     plt.grid()
@@ -30,8 +30,9 @@ After running in ipython you can plot the pressure by typing:
 The shape of the elemental abundances can be shown as follows:
 
     plt.figure()
-    plt.plot(isotopic_data.element_mass, mole_elements/isotopic_data.solar_abundances,'-s')
-    plt.yscale('log')
+    plt.plot(main.isotopic_data.element_mass,  \
+				mole_elements/main.isotopic_data.solar_abundances/1e16,'-s',lw=1)      
+	 plt.yscale('log')
     plt.grid()
     plt.ylabel('Abundances wrt solar values')
     plt.xlabel('Mass number')
