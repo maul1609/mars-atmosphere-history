@@ -67,7 +67,7 @@ def N20_between(Amars,t1,t2,model=1):
 
 if __name__ == "__main__":
     from scipy.integrate import quad
-    
+    import matplotlib.pyplot as plt
     Rmars=3389.5e3
     Amars=4.*np.pi*Rmars**2
     t=4.5
@@ -108,4 +108,5 @@ if __name__ == "__main__":
     plt.ylabel(r'$\frac{dN}{dt}$ (m$^{-2}$ Gyr$^{-1}$)')
     plt.legend(['Neukum & Ivanov (1994)','sawtooth 1','sawtooth 2',\
     	'Small < 1km craters'])
+    plt.show()
     

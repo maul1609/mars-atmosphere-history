@@ -94,6 +94,13 @@ $\frac{^{136}Xe}{^{130}Xe}$ is the 5th entry in the isotope ratio list, and ther
 which is around 1.76
 
 
+## Batch mode running
+You can run the model in batch mode using iPython by typing 
+
+	run -i batch_runs
+
+The number of simulations is set using the `num_runs` variable and the number of cores using the `num_cores` variable in this script. You will need to edit these numbers.  `batch_runs` calls `main.run_model` lots of times in parallel. 
+
 ## Overview
 This Python model is based on the paper by Kurokawa et al. (2018, [here](http://dx.doi.org/10.1016/j.icarus.2017.08.020)). 
 
