@@ -14,7 +14,7 @@ if __name__== "__main__":
     obliquity=2 # 1==0 deg; 2==45 deg; 3==90 deg
     sputtering=True
     photochemical_escape=True 
-    textadd=', without Sputtering and PCE'
+    textadd=', with Sputtering and PCE'
     pool = multiprocessing.Pool(processes=num_cores)
     results=[pool.apply_async(main.run_model, \
        args=([i],obliquity), \
@@ -23,7 +23,8 @@ if __name__== "__main__":
        'C_Ne_IDP': 1., \
        'f_comet':0.0005, \
        'X_gas': 0.01, \
-       'crater_model' : 1}) for i in range(num_runs)]
+       'crater_model' : 1, \
+       'dynamo_time' : 4.5}) for i in range(num_runs)]
     output = [p.get() for p in results]
     pool.close()
     pool.join()

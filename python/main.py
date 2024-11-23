@@ -29,7 +29,8 @@ def test(y,t,omega):
 
 # if __name__ == "__main__":
 def run_model(runNo, obliquity_flag, sputtering_flag=True, pce_flag=True,\
-        X_gas=0.01,f_comet=0.001, C_vol=5.0, crater_model=1,C_Ne_IDP = 10.):
+        X_gas=0.01,f_comet=0.001, C_vol=5.0, crater_model=1,C_Ne_IDP = 10.,\
+	dynamo_time = 4.1):
     """
         initial conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     """
@@ -237,7 +238,7 @@ def run_model(runNo, obliquity_flag, sputtering_flag=True, pce_flag=True,\
         # deltaM is the atmospheric loss for impactor = mass
         # Xpr*mass*0.01 is the mass added from the projectiles
         mass_added = np.sum((1.-Xpr)*mass)*X_gas*scaling
-        if(t[i]  > -4.1e9):
+        if(t[i]  > -(dynamo_time)*1e9):
             f_comet1 = f_comet
         else:
             f_comet1 = 0.
@@ -337,7 +338,7 @@ def run_model(runNo, obliquity_flag, sputtering_flag=True, pce_flag=True,\
         F_i_sp1=MarsSputtering_Calc6_7.F_i_sp(f_co2_flux, \
             mole_elements,Natm[0],['C','N','Ne','Ar','Kr','Xe'])
         # CO2 and N2 - only after 4.1 Gyr
-        if((-t[i]/1e9<4.1) and sputtering_flag):
+        if((-t[i]/1e9< dynamo_time ) and sputtering_flag):
             Natm[0] = Natm[0] - F_i_sp1[0] * tstep *86400*365/6.02e23
             Natm[1] = Natm[1] - 0.5*F_i_sp1[1] * tstep *86400*365/6.02e23
             #Natm = np.maximum(Natm,0.)
@@ -361,7 +362,7 @@ def run_model(runNo, obliquity_flag, sputtering_flag=True, pce_flag=True,\
         
         # 5b photochemical escape
         # carbon - rate of escape
-        if pce_flag:
+        if ((-t[i]/1e9< dynamo_time ) and pce_flag):
                 Fcph = photo_chemical.carbon_escape((t[i]-tinit)/1e9,\
                     (t[i+1]-tinit)/1e9,(-tinit)/1e9) / 6.02e23
                 # nitrogen - rate of escape
