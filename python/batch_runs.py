@@ -24,7 +24,7 @@ if __name__== "__main__":
        'f_comet':0.0005, \
        'X_gas': 0.01, \
        'crater_model' : 1, \
-       'dynamo_time' : 4.5}) for i in range(num_runs)]
+       'dynamo_time' : 4.1}) for i in range(num_runs)]
     output = [p.get() for p in results]
     pool.close()
     pool.join()
