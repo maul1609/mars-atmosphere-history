@@ -4,10 +4,19 @@ import main
 import matplotlib.pyplot as plt
 from isotopic_data import errorbars1
 import numpy as np
+import getpass
+import os
+
 num_runs=10
 num_cores=10
 
 nc=min([num_runs,num_cores])
+
+
+username=getpass.getuser()
+if(not os.path.exists('/tmp/' + username)):
+    os.mkdir('/tmp/' + username)
+
 
 if __name__== "__main__":
     
@@ -121,7 +130,8 @@ if __name__== "__main__":
 
     #fig.tight_layout()
     plt.subplots_adjust(wspace=0, hspace=0)
-    plt.savefig('/tmp/temp1.png')
+    plt.show()
+    plt.savefig('/tmp/' + username +  '/temp1.png')
 
 
   
@@ -145,7 +155,7 @@ if __name__== "__main__":
     plt.ylabel('Abundances wrt solar values')
     plt.xlabel('Mass number')
     plt.title('Elemental Abundances ' + textadd)
-    plt.savefig('/tmp/temp2.png')
+    plt.savefig('/tmp/' + username +  '/temp2.png')
 
     
 
